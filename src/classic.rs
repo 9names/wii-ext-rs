@@ -107,7 +107,7 @@ impl ClassicReading {
     fn scale_6bit_8bit(reading: u8) -> u8 {
         // TODO: better math here, move this somewhere common
         // For now, accept a bit of reduced range
-        reading * 7
+        reading * 4
     }
     #[rustfmt::skip]
     pub fn from_data(data: &[u8]) -> Option<ClassicReading> {
