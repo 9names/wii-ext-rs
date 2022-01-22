@@ -53,6 +53,11 @@ pub enum Error<E> {
     InvalidInputData,
 }
 
+/// Data from a classic controller after it has been deserialized
+///
+/// In low-res mode, axes with less than 8 bits of range will be
+/// scaled to approximate an 8 bit range.
+/// in hi-res mode, all axes arleady have 8 bits of range
 #[cfg_attr(feature = "defmt_print", derive(defmt::Format))]
 #[derive(Debug, Default)]
 pub struct ClassicReading {
@@ -77,6 +82,82 @@ pub struct ClassicReading {
     pub button_minus: bool,
     pub button_plus: bool,
     pub button_home: bool,
+}
+
+/// Data from a classic controller after calibration data has been applied
+///
+/// Calibration is done by subtracting the resting values from the current
+/// values, which means that going lower on the axis will go negative.
+/// Due to this, we now store analog values as signed integers
+#[cfg_attr(feature = "defmt_print", derive(defmt::Format))]
+#[derive(Debug, Default)]
+pub struct ClassicReadingCalibrated {
+    pub joysick_left_x: i8,
+    pub joysick_left_y: i8,
+    pub joysick_right_x: i8,
+    pub joysick_right_y: i8,
+    pub trigger_left: i8,
+    pub trigger_right: i8,
+    pub dpad_up: bool,
+    pub dpad_down: bool,
+    pub dpad_left: bool,
+    pub dpad_right: bool,
+    pub button_b: bool,
+    pub button_a: bool,
+    pub button_x: bool,
+    pub button_y: bool,
+    pub button_trigger_l: bool,
+    pub button_trigger_r: bool,
+    pub button_zl: bool,
+    pub button_zr: bool,
+    pub button_minus: bool,
+    pub button_plus: bool,
+    pub button_home: bool,
+}
+
+impl ClassicReadingCalibrated {
+    pub fn new(r: ClassicReading, c: &CalibrationData) -> ClassicReadingCalibrated {
+        /// Just in case `data` minus `calibration data` is out of range, perform all operations
+        /// on i16 and clamp to i8 limits before returning
+        fn ext_u8_sub(a: u8, b: u8) -> i8 {
+            let res = (a as i16) - (b as i16);
+            res.clamp(i8::MIN as i16, i8::MAX as i16) as i8
+        }
+
+        ClassicReadingCalibrated {
+            joysick_left_x: ext_u8_sub(r.joysick_left_x, c.joysick_left_x),
+            joysick_left_y: ext_u8_sub(r.joysick_left_y, c.joysick_left_y),
+            joysick_right_x: ext_u8_sub(r.joysick_right_x, c.joysick_right_x),
+            joysick_right_y: ext_u8_sub(r.joysick_right_y, c.joysick_right_y),
+            trigger_left: ext_u8_sub(r.trigger_left, c.trigger_left),
+            trigger_right: ext_u8_sub(r.trigger_right, c.trigger_right),
+            dpad_up: r.dpad_up,
+            dpad_down: r.dpad_down,
+            dpad_left: r.dpad_left,
+            dpad_right: r.dpad_right,
+            button_b: r.button_b,
+            button_a: r.button_a,
+            button_x: r.button_x,
+            button_y: r.button_y,
+            button_trigger_l: r.button_trigger_l,
+            button_trigger_r: r.button_trigger_r,
+            button_zl: r.button_zl,
+            button_zr: r.button_zr,
+            button_minus: r.button_minus,
+            button_plus: r.button_plus,
+            button_home: r.button_home,
+        }
+    }
+}
+
+#[derive(Default)]
+pub struct CalibrationData {
+    pub joysick_left_x: u8,
+    pub joysick_left_y: u8,
+    pub joysick_right_x: u8,
+    pub joysick_right_y: u8,
+    pub trigger_left: u8,
+    pub trigger_right: u8,
 }
 
 impl ClassicReading {
@@ -109,6 +190,7 @@ impl ClassicReading {
         // For now, accept a bit of reduced range
         reading * 4
     }
+
     #[rustfmt::skip]
     pub fn from_data(data: &[u8]) -> Option<ClassicReading> {
         if data.len() == 6 {
@@ -196,6 +278,7 @@ impl ClassicReading {
 pub struct Classic<I2C> {
     i2cdev: I2C,
     hires: bool,
+    calibration: CalibrationData,
 }
 
 // use crate::nunchuk;
@@ -212,9 +295,28 @@ where
         let mut classic = Classic {
             i2cdev,
             hires: false,
+            calibration: CalibrationData::default(),
         };
         classic.init(delay)?;
         Ok(classic)
+    }
+
+    /// Update the stored calibration for this controller
+    ///
+    /// Since each device will have different tolerances, we take a snapshot of some analog data
+    /// to use as the "baseline" center.
+    fn update_calibration_data<D: DelayMs<u8>>(&mut self, delay: &mut D) -> Result<(), Error<E>> {
+        let data = self.read_blocking(delay)?;
+
+        self.calibration = CalibrationData {
+            joysick_left_x: data.joysick_left_x,
+            joysick_left_y: data.joysick_left_y,
+            joysick_right_x: data.joysick_right_x,
+            joysick_right_y: data.joysick_right_y,
+            trigger_left: data.trigger_left,
+            trigger_right: data.trigger_left,
+        };
+        Ok(())
     }
 
     fn set_read_register_address(&mut self, byte0: u8) -> Result<(), Error<E>> {
@@ -258,6 +360,7 @@ where
         delay.delay_ms(1);
         self.set_register(0xFB, 0x00)?;
         delay.delay_ms(1);
+        self.update_calibration_data(delay)?;
         Ok(())
     }
 
@@ -265,6 +368,7 @@ where
         self.set_register(0xFE, 0x03)?;
         delay.delay_ms(1);
         self.hires = true;
+        self.update_calibration_data(delay)?;
         Ok(())
     }
 
@@ -338,6 +442,17 @@ where
         delay.delay_ms(10);
         self.read_classic()
     }
+
+    /// Do a read, convert the value to a calibrated one
+    pub fn read_blocking_calibrated<D: DelayMs<u8>>(
+        &mut self,
+        delay: &mut D,
+    ) -> Result<ClassicReadingCalibrated, Error<E>> {
+        Ok(ClassicReadingCalibrated::new(
+            self.read_blocking(delay)?,
+            &self.calibration,
+        ))
+    }
 }
 
 #[cfg(test)]
@@ -360,6 +475,7 @@ mod tests {
         let mut nc = Classic {
             i2cdev: mock,
             hires: false,
+            calibration: CalibrationData::default(),
         };
         let report = nc.read_no_wait().unwrap();
         report.assert_digital_eq(ClassicReading::default());
@@ -398,7 +514,11 @@ mod tests {
                         Transaction::read(EXT_I2C_ADDR as u8, $y.to_vec()),
                     ];
                     let mock = i2c::Mock::new(&expectations);
-                    let mut nc = Classic { i2cdev: mock, hires: false };
+                    let mut nc = Classic {
+                        i2cdev: mock,
+                        hires: false,
+                        calibration: CalibrationData::default()
+                    };
                     let report = nc.read_no_wait().unwrap();
                     report.assert_digital_eq(ClassicReading {
                         $x: true,
