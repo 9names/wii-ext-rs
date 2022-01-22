@@ -87,9 +87,9 @@ where
     /// This method will open the provide i2c device file and will
     /// send the required init sequence in order to read data in
     /// the future.
-    pub fn new(i2cdev: T) -> Result<Nunchuk<T>, Error<E>> {
+    pub fn new<D: DelayMs<u8>>(i2cdev: T, delay: &mut D) -> Result<Nunchuk<T>, Error<E>> {
         let mut nunchuk = Nunchuk { i2cdev };
-        nunchuk.init()?;
+        nunchuk.init(delay)?;
         Ok(nunchuk)
     }
 
@@ -113,13 +113,17 @@ where
             .and(Ok(buffer))
     }
 
-    /// Send the init sequence to the Wii Nunchuck
-    pub fn init(&mut self) -> Result<(), Error<E>> {
+    /// Send the init sequence to the Wii extension controller
+    ///
+    /// This could be a bit faster with DelayUs, but since you only init once we'll re-use delay_ms
+    pub fn init<D: DelayMs<u8>>(&mut self, delay: &mut D) -> Result<(), Error<E>> {
         // These registers must be written to disable encryption.; the documentation is a bit
         // lacking but it appears this is some kind of handshake to
         // perform unencrypted data tranfers
         self.set_register(0xF0, 0x55)?;
+        delay.delay_ms(1);
         self.set_register(0xFB, 0x00)?;
+        delay.delay_ms(1);
         Ok(())
     }
 
