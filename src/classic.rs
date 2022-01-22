@@ -8,26 +8,7 @@
 // Classic mode:
 // http://wiibrew.org/wiki/Wiimote/Extension_Controllers/Classic_Controller
 //
-//  Bit
-// 	Byte	7	6	5	4	3	2	1	0
-// 	0	RX<4:3>	LX<5:0>
-// 	1	RX<2:1>	LY<5:0>
-// 	2	RX<0>	LT<4:3>	RY<4:0>
-// 	3	LT<2:0>	RT<4:0>
-// 	4	BDR	BDD	BLT	B-	BH	B+	BRT	1
-// 	5	BZL	BB	BY	BA	BX	BZR	BDL	BDU
-//
-// High precision mode:
-// Bit    7    6    5    4    3    2    1    0
-// Byte
-// 0      LX<7:0>
-// 1      RX<7:0>
-// 2      LY<7:0>
-// 3      RY<7:0>
-// 4      LT<7:0>
-// 5      RT<7:0>
-// 6      BDR  BDD  BLT  B-   BH   B+   BRT  1
-// 7      BZL  BB   BY   BA   BX   BZR  BDL  BDU
+// See `decode_classic_report` and `decode_classic_hd_report` for data format
 
 use crate::ExtHdReport;
 use crate::ExtReport;
@@ -150,6 +131,87 @@ impl ClassicReadingCalibrated {
     }
 }
 
+#[rustfmt::skip]
+fn decode_classic_report(data: &[u8]) -> ClassicReading {
+    // Classic mode:
+    //  Bit	7	6	5	4	3	2	1	0
+    // 	Byte
+    // 	0	RX<4:3>	LX<5:0>
+    // 	1	RX<2:1>	LY<5:0>
+    // 	2	RX<0>	LT<4:3>	RY<4:0>
+    // 	3	LT<2:0>	RT<4:0>
+    // 	4	BDR	BDD	BLT	B-	BH	B+	BRT	1
+    // 	5	BZL	BB	BY	BA	BX	BZR	BDL	BDU
+    ClassicReading {
+        joysick_left_x:   ClassicReading::scale_6bit_8bit(data[0] & 0b0011_1111),
+        joysick_left_y:   ClassicReading::scale_6bit_8bit(data[1] & 0b0011_1111),
+        joysick_right_x:  ClassicReading::scale_5bit_8bit(
+            ((data[2] & 0b1000_0000) >> 7) &
+            ((data[1] & 0b1100_0000) >> 5) &
+            ((data[0] & 0b1100_0000) >> 3)
+        ),
+        joysick_right_y:  ClassicReading::scale_6bit_8bit(data[2] & 0b0001_1111),
+        trigger_left:     ClassicReading::scale_5bit_8bit(
+            ((data[2] & 0b0110_0000) >> 2) &
+            ((data[3] & 0b1110_0000) >> 5)
+        ),
+        trigger_right:    ClassicReading::scale_5bit_8bit(data[3] & 0b0001_1111),
+        dpad_right:       data[4] & 0b1000_0000 == 0,
+        dpad_down:        data[4] & 0b0100_0000 == 0,
+        button_trigger_l: data[4] & 0b0010_0000 == 0,
+        button_minus:     data[4] & 0b0001_0000 == 0,
+        button_home:      data[4] & 0b0000_1000 == 0,
+        button_plus:      data[4] & 0b0000_0100 == 0,
+        button_trigger_r: data[4] & 0b0000_0010 == 0,
+        button_zl:        data[5] & 0b1000_0000 == 0,
+        button_b:         data[5] & 0b0100_0000 == 0,
+        button_y:         data[5] & 0b0010_0000 == 0,
+        button_a:         data[5] & 0b0001_0000 == 0,
+        button_x:         data[5] & 0b0000_1000 == 0,
+        button_zr:        data[5] & 0b0000_0100 == 0,
+        dpad_left:        data[5] & 0b0000_0010 == 0,
+        dpad_up:          data[5] & 0b0000_0001 == 0,
+    }
+}
+
+#[rustfmt::skip]
+fn decode_classic_hd_report(data: &[u8]) -> ClassicReading {
+    // High precision mode:
+    // Bit    7    6    5    4    3    2    1    0
+    // Byte
+    // 0      LX<7:0>
+    // 1      RX<7:0>
+    // 2      LY<7:0>
+    // 3      RY<7:0>
+    // 4      LT<7:0>
+    // 5      RT<7:0>
+    // 6      BDR  BDD  BLT  B-   BH   B+   BRT  1
+    // 7      BZL  BB   BY   BA   BX   BZR  BDL  BDU
+    ClassicReading {
+        joysick_left_x:   data[0],
+        joysick_right_x:  data[1],
+        joysick_left_y:   data[2],
+        joysick_right_y:  data[3],
+        trigger_left:     data[4],
+        trigger_right:    data[5],
+        dpad_right:       data[6] & 0b1000_0000 == 0,
+        dpad_down:        data[6] & 0b0100_0000 == 0,
+        button_trigger_l: data[6] & 0b0010_0000 == 0,
+        button_minus:     data[6] & 0b0001_0000 == 0,
+        button_home:      data[6] & 0b0000_1000 == 0,
+        button_plus:      data[6] & 0b0000_0100 == 0,
+        button_trigger_r: data[6] & 0b0000_0010 == 0,
+        button_zl:        data[7] & 0b1000_0000 == 0,
+        button_b:         data[7] & 0b0100_0000 == 0,
+        button_y:         data[7] & 0b0010_0000 == 0,
+        button_a:         data[7] & 0b0001_0000 == 0,
+        button_x:         data[7] & 0b0000_1000 == 0,
+        button_zr:        data[7] & 0b0000_0100 == 0,
+        dpad_left:        data[7] & 0b0000_0010 == 0,
+        dpad_up:          data[7] & 0b0000_0001 == 0,
+    }
+}
+
 #[derive(Default)]
 pub struct CalibrationData {
     pub joysick_left_x: u8,
@@ -191,84 +253,15 @@ impl ClassicReading {
         reading * 4
     }
 
-    #[rustfmt::skip]
+    /// Convert from a wii-ext report into controller data
     pub fn from_data(data: &[u8]) -> Option<ClassicReading> {
         if data.len() == 6 {
             // Classic mode:
-            //  Bit	7	6	5	4	3	2	1	0
-            // 	Byte
-            // 	0	RX<4:3>	LX<5:0>
-            // 	1	RX<2:1>	LY<5:0>
-            // 	2	RX<0>	LT<4:3>	RY<4:0>
-            // 	3	LT<2:0>	RT<4:0>
-            // 	4	BDR	BDD	BLT	B-	BH	B+	BRT	1
-            // 	5	BZL	BB	BY	BA	BX	BZR	BDL	BDU
-            Some(ClassicReading {
-                joysick_left_x:   ClassicReading::scale_6bit_8bit(data[0] & 0b0011_1111),
-                joysick_left_y:   ClassicReading::scale_6bit_8bit(data[1] & 0b0011_1111),
-                joysick_right_x:  ClassicReading::scale_5bit_8bit(
-                    ((data[2] & 0b1000_0000) >> 7) &
-                    ((data[1] & 0b1100_0000) >> 5) &
-                    ((data[0] & 0b1100_0000) >> 3)
-                ),
-                joysick_right_y:  ClassicReading::scale_6bit_8bit(data[2] & 0b0001_1111),
-                trigger_left:     ClassicReading::scale_5bit_8bit(
-                    ((data[2] & 0b0110_0000) >> 2) &
-                    ((data[3] & 0b1110_0000) >> 5)
-                ),
-                trigger_right:    ClassicReading::scale_5bit_8bit(data[3] & 0b0001_1111),
-                dpad_right:       data[4] & 0b1000_0000 == 0,
-                dpad_down:        data[4] & 0b0100_0000 == 0,
-                button_trigger_l: data[4] & 0b0010_0000 == 0,
-                button_minus:     data[4] & 0b0001_0000 == 0,
-                button_home:      data[4] & 0b0000_1000 == 0,
-                button_plus:      data[4] & 0b0000_0100 == 0,
-                button_trigger_r: data[4] & 0b0000_0010 == 0,
-                button_zl:        data[5] & 0b1000_0000 == 0,
-                button_b:         data[5] & 0b0100_0000 == 0,
-                button_y:         data[5] & 0b0010_0000 == 0,
-                button_a:         data[5] & 0b0001_0000 == 0,
-                button_x:         data[5] & 0b0000_1000 == 0,
-                button_zr:        data[5] & 0b0000_0100 == 0,
-                dpad_left:        data[5] & 0b0000_0010 == 0,
-                dpad_up:          data[5] & 0b0000_0001 == 0,
-            })
+            Some(decode_classic_report(data))
         }
         else if data.len() == 8 {
             // High precision mode:
-            // Bit    7    6    5    4    3    2    1    0
-            // Byte
-            // 0      LX<7:0>
-            // 1      RX<7:0>
-            // 2      LY<7:0>
-            // 3      RY<7:0>
-            // 4      LT<7:0>
-            // 5      RT<7:0>
-            // 6      BDR  BDD  BLT  B-   BH   B+   BRT  1
-            // 7      BZL  BB   BY   BA   BX   BZR  BDL  BDU
-            Some(ClassicReading {
-                joysick_left_x:   data[0],
-                joysick_right_x:  data[1],
-                joysick_left_y:   data[2],
-                joysick_right_y:  data[3],
-                trigger_left:     data[4],
-                trigger_right:    data[5],
-                dpad_right:       data[6] & 0b1000_0000 == 0,
-                dpad_down:        data[6] & 0b0100_0000 == 0,
-                button_trigger_l: data[6] & 0b0010_0000 == 0,
-                button_minus:     data[6] & 0b0001_0000 == 0,
-                button_home:      data[6] & 0b0000_1000 == 0,
-                button_plus:      data[6] & 0b0000_0100 == 0,
-                button_trigger_r: data[6] & 0b0000_0010 == 0,
-                button_zl:        data[7] & 0b1000_0000 == 0,
-                button_b:         data[7] & 0b0100_0000 == 0,
-                button_y:         data[7] & 0b0010_0000 == 0,
-                button_a:         data[7] & 0b0001_0000 == 0,
-                button_x:         data[7] & 0b0000_1000 == 0,
-                button_zr:        data[7] & 0b0000_0100 == 0,
-                dpad_left:        data[7] & 0b0000_0010 == 0,
-                dpad_up:          data[7] & 0b0000_0001 == 0,
-            })
+            Some(decode_classic_hd_report(data))
         } else {
             None
         }
