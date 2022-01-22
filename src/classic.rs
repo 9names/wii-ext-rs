@@ -166,8 +166,8 @@ impl ClassicReading {
             // 7      BZL  BB   BY   BA   BX   BZR  BDL  BDU
             Some(ClassicReading {
                 joysick_left_x:   data[0],
-                joysick_left_y:   data[1],
-                joysick_right_x:  data[2],
+                joysick_right_x:  data[1],
+                joysick_left_y:   data[2],
                 joysick_right_y:  data[3],
                 trigger_left:     data[4],
                 trigger_right:    data[5],
