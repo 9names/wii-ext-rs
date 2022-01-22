@@ -35,6 +35,9 @@ use crate::EXT_I2C_ADDR;
 use embedded_hal::blocking::delay::DelayMs;
 use embedded_hal::blocking::i2c as i2ctrait;
 
+#[cfg(feature = "defmt_print")]
+use defmt;
+
 #[derive(Debug)]
 pub enum ClassicError<E> {
     Error(E),
@@ -50,6 +53,7 @@ pub enum Error<E> {
     InvalidInputData,
 }
 
+#[cfg_attr(feature = "defmt_print", derive(defmt::Format))]
 #[derive(Debug, Default)]
 pub struct ClassicReading {
     pub joysick_left_x: u8,
@@ -333,7 +337,6 @@ where
 
 #[cfg(test)]
 mod tests {
-
     use super::*;
     use crate::test_data::{self, *};
     use embedded_hal_mock::i2c::{self, Transaction};

@@ -6,6 +6,9 @@ use crate::EXT_I2C_ADDR;
 // use crate::ExtHdReport;
 use embedded_hal::blocking::delay::DelayMs;
 
+#[cfg(feature = "defmt_print")]
+use defmt;
+
 #[derive(Debug)]
 pub enum NunchukError<E> {
     Error(E),
@@ -41,6 +44,7 @@ pub enum Error<E> {
 
 // TODO: Move Nunchuck code out to be an actual sensor and add tests
 
+#[cfg_attr(feature = "defmt_print", derive(defmt::Format))]
 #[derive(Debug)]
 pub struct NunchukReading {
     pub joystick_x: u8,
