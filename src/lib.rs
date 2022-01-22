@@ -8,7 +8,7 @@ pub type ExtReport = [u8; 6];
 pub type ExtHdReport = [u8; 8];
 
 /// All Wii extension controllers use i2c address 52
-pub const EXT_I2C_ADDR: u16 = 52;
+pub const EXT_I2C_ADDR: u16 = 0x52;
 
 #[cfg(test)]
 mod test_data;
