@@ -24,26 +24,6 @@ pub enum Error<E> {
     InvalidInputData,
 }
 
-// impl<E: Error> fmt::Display for NunchuckError<E> {
-//     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-//         match *self {
-//             NunchuckError::Error(ref e) => fmt::Display::fmt(e, f),
-//             NunchuckError::ParseError => write!(f, "Could not parse data"),
-//         }
-//     }
-// }
-
-// impl<E: Error> Error for NunchuckError<E> {
-//     fn cause(&self) -> Option<&dyn Error> {
-//         match *self {
-//             NunchuckError::Error(ref e) => Some(e),
-//             NunchuckError::ParseError => None,
-//         }
-//     }
-// }
-
-// TODO: Move Nunchuck code out to be an actual sensor and add tests
-
 #[cfg_attr(feature = "defmt_print", derive(defmt::Format))]
 #[derive(Debug)]
 pub struct NunchukReading {
