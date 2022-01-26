@@ -13,7 +13,8 @@
 use crate::ExtHdReport;
 use crate::ExtReport;
 use crate::EXT_I2C_ADDR;
-use embedded_hal::blocking::delay::DelayMs;
+use crate::INTERMESSAGE_DELAY_MICROSEC;
+use embedded_hal::blocking::delay::DelayUs;
 use embedded_hal::blocking::i2c as i2ctrait;
 
 #[cfg(feature = "defmt_print")]
@@ -258,8 +259,7 @@ impl ClassicReading {
         if data.len() == 6 {
             // Classic mode:
             Some(decode_classic_report(data))
-        }
-        else if data.len() == 8 {
+        } else if data.len() == 8 {
             // High precision mode:
             Some(decode_classic_hd_report(data))
         } else {
@@ -284,7 +284,7 @@ where
     /// This method will open the provide i2c device file and will
     /// send the required init sequence in order to read data in
     /// the future.
-    pub fn new<D: DelayMs<u8>>(i2cdev: T, delay: &mut D) -> Result<Classic<T>, Error<E>> {
+    pub fn new<D: DelayUs<u16>>(i2cdev: T, delay: &mut D) -> Result<Classic<T>, Error<E>> {
         let mut classic = Classic {
             i2cdev,
             hires: false,
@@ -298,7 +298,7 @@ where
     ///
     /// Since each device will have different tolerances, we take a snapshot of some analog data
     /// to use as the "baseline" center.
-    fn update_calibration_data<D: DelayMs<u8>>(&mut self, delay: &mut D) -> Result<(), Error<E>> {
+    fn update_calibration_data<D: DelayUs<u16>>(&mut self, delay: &mut D) -> Result<(), Error<E>> {
         let data = self.read_blocking(delay)?;
 
         self.calibration = CalibrationData {
@@ -319,9 +319,9 @@ where
             .and(Ok(()))
     }
 
-    fn set_register(&mut self, byte0: u8, byte1: u8) -> Result<(), Error<E>> {
+    fn set_register(&mut self, addr: u8, byte1: u8) -> Result<(), Error<E>> {
         self.i2cdev
-            .write(EXT_I2C_ADDR as u8, &[byte0, byte1])
+            .write(EXT_I2C_ADDR as u8, &[addr, byte1])
             .map_err(Error::I2C)
             .and(Ok(()))
     }
@@ -334,7 +334,7 @@ where
             .and(Ok(buffer))
     }
 
-    fn read_hd_report(&mut self) -> Result<ExtHdReport, Error<E>> {
+        fn read_hd_report(&mut self) -> Result<ExtHdReport, Error<E>> {
         let mut buffer: ExtHdReport = ExtHdReport::default();
         self.i2cdev
             .read(EXT_I2C_ADDR as u8, &mut buffer)
@@ -345,21 +345,25 @@ where
     /// Send the init sequence to the Wii extension controller
     ///
     /// This could be a bit faster with DelayUs, but since you only init once we'll re-use delay_ms
-    pub fn init<D: DelayMs<u8>>(&mut self, delay: &mut D) -> Result<(), Error<E>> {
+    pub fn init<D: DelayUs<u16>>(&mut self, delay: &mut D) -> Result<(), Error<E>> {
         // Extension controllers by default will use encrypted communication, as that is what the Wii does.
         // We can disable this encryption by writing some magic values
         // This is described at https://wiibrew.org/wiki/Wiimote/Extension_Controllers#The_New_Way
+
+        // Reset to base register first - this should recover a controller in a weird state.
+        self.set_read_register_address(0)?;
+        delay.delay_us(INTERMESSAGE_DELAY_MICROSEC);
         self.set_register(0xF0, 0x55)?;
-        delay.delay_ms(1);
+        delay.delay_us(INTERMESSAGE_DELAY_MICROSEC);
         self.set_register(0xFB, 0x00)?;
-        delay.delay_ms(1);
+        delay.delay_us(INTERMESSAGE_DELAY_MICROSEC);
         self.update_calibration_data(delay)?;
         Ok(())
     }
 
-    pub fn enable_hires<D: DelayMs<u8>>(&mut self, delay: &mut D) -> Result<(), Error<E>> {
+    pub fn enable_hires<D: DelayUs<u16>>(&mut self, delay: &mut D) -> Result<(), Error<E>> {
         self.set_register(0xFE, 0x03)?;
-        delay.delay_ms(1);
+        delay.delay_us(INTERMESSAGE_DELAY_MICROSEC);
         self.hires = true;
         self.update_calibration_data(delay)?;
         Ok(())
@@ -426,18 +430,17 @@ where
     }
 
     /// Simple blocking read helper that will start a sample, wait 10ms, then read the value
-    /// TODO: work out required delay here
-    pub fn read_blocking<D: DelayMs<u8>>(
+    pub fn read_blocking<D: DelayUs<u16>>(
         &mut self,
         delay: &mut D,
     ) -> Result<ClassicReading, Error<E>> {
         self.start_sample()?;
-        delay.delay_ms(10);
+        delay.delay_us(INTERMESSAGE_DELAY_MICROSEC);
         self.read_classic()
     }
 
     /// Do a read, convert the value to a calibrated one
-    pub fn read_blocking_calibrated<D: DelayMs<u8>>(
+    pub fn read_blocking_calibrated<D: DelayUs<u16>>(
         &mut self,
         delay: &mut D,
     ) -> Result<ClassicReadingCalibrated, Error<E>> {

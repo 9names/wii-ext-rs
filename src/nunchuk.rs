@@ -1,10 +1,11 @@
 use crate::ExtReport;
 use crate::EXT_I2C_ADDR;
+use crate::INTERMESSAGE_DELAY_MICROSEC;
 // nunchuk technically supports HD report, but the last two bytes will be zeroes
 // TODO: work out if it's worth supporting that
 // TODO: add support for the
 // use crate::ExtHdReport;
-use embedded_hal::blocking::delay::DelayMs;
+use embedded_hal::blocking::delay::DelayUs;
 
 #[cfg(feature = "defmt_print")]
 use defmt;
@@ -67,7 +68,7 @@ where
     /// This method will open the provide i2c device file and will
     /// send the required init sequence in order to read data in
     /// the future.
-    pub fn new<D: DelayMs<u8>>(i2cdev: T, delay: &mut D) -> Result<Nunchuk<T>, Error<E>> {
+    pub fn new<D: DelayUs<u16>>(i2cdev: T, delay: &mut D) -> Result<Nunchuk<T>, Error<E>> {
         let mut nunchuk = Nunchuk { i2cdev };
         nunchuk.init(delay)?;
         Ok(nunchuk)
@@ -96,14 +97,14 @@ where
     /// Send the init sequence to the Wii extension controller
     ///
     /// This could be a bit faster with DelayUs, but since you only init once we'll re-use delay_ms
-    pub fn init<D: DelayMs<u8>>(&mut self, delay: &mut D) -> Result<(), Error<E>> {
+    pub fn init<D: DelayUs<u16>>(&mut self, delay: &mut D) -> Result<(), Error<E>> {
         // These registers must be written to disable encryption.; the documentation is a bit
         // lacking but it appears this is some kind of handshake to
         // perform unencrypted data tranfers
         self.set_register(0xF0, 0x55)?;
-        delay.delay_ms(1);
+        delay.delay_us(INTERMESSAGE_DELAY_MICROSEC);
         self.set_register(0xFB, 0x00)?;
-        delay.delay_ms(1);
+        delay.delay_us(INTERMESSAGE_DELAY_MICROSEC);
         Ok(())
     }
 
@@ -126,12 +127,12 @@ where
     }
 
     /// Simple blocking read helper that will start a sample, wait 10ms, then read the value
-    pub fn read_blocking<D: DelayMs<u8>>(
+    pub fn read_blocking<D: DelayUs<u16>>(
         &mut self,
         delay: &mut D,
     ) -> Result<NunchukReading, Error<E>> {
         self.start_sample()?;
-        delay.delay_ms(10);
+        delay.delay_us(INTERMESSAGE_DELAY_MICROSEC);
         self.read_nunchuk()
     }
 }
