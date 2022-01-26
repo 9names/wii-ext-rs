@@ -132,6 +132,7 @@ impl ClassicReadingCalibrated {
     }
 }
 
+/// Convert raw data as returned from controller via i2c into buttons and axis fields
 #[rustfmt::skip]
 fn decode_classic_report(data: &[u8]) -> ClassicReading {
     // Classic mode:
@@ -175,6 +176,7 @@ fn decode_classic_report(data: &[u8]) -> ClassicReading {
     }
 }
 
+/// Convert high-resolution raw data as returned from controller via i2c into buttons and axis fields
 #[rustfmt::skip]
 fn decode_classic_hd_report(data: &[u8]) -> ClassicReading {
     // High precision mode:
@@ -213,6 +215,9 @@ fn decode_classic_hd_report(data: &[u8]) -> ClassicReading {
     }
 }
 
+/// Relaxed/Center positions for each axis
+/// 
+/// These are used to calculate the relative deflection of each access from their center point
 #[derive(Default)]
 pub struct CalibrationData {
     pub joysick_left_x: u8,
@@ -242,12 +247,14 @@ impl ClassicReading {
         assert_eq!(self.button_minus, other.button_minus);
     }
 
+    /// Some axis' data is u5, scale it to u8 for convenience
     fn scale_5bit_8bit(reading: u8) -> u8 {
         // TODO: better math here, move this somewhere common
         // For now, accept a bit of reduced range
         reading * 8
     }
 
+    /// Some axis' data is u6, scale it to u8 for convenience
     fn scale_6bit_8bit(reading: u8) -> u8 {
         // TODO: better math here, move this somewhere common
         // For now, accept a bit of reduced range
@@ -312,6 +319,12 @@ where
         Ok(())
     }
 
+    /// Set the cursor position for the next i2c read
+    ///
+    /// This hardware has a range of 100 registers and automatically
+    /// increments the register read postion on each read operation, and also on
+    /// every write operation.
+    /// This should be called before a read operation to ensure you get the correct data
     fn set_read_register_address(&mut self, byte0: u8) -> Result<(), Error<E>> {
         self.i2cdev
             .write(EXT_I2C_ADDR as u8, &[byte0])
@@ -319,6 +332,7 @@ where
             .and(Ok(()))
     }
 
+    /// Set a single register at target address
     fn set_register(&mut self, addr: u8, byte1: u8) -> Result<(), Error<E>> {
         self.i2cdev
             .write(EXT_I2C_ADDR as u8, &[addr, byte1])
@@ -326,6 +340,7 @@ where
             .and(Ok(()))
     }
 
+    /// Read the button/axis data from the classic controller
     fn read_report(&mut self) -> Result<ExtReport, Error<E>> {
         let mut buffer: ExtReport = ExtReport::default();
         self.i2cdev
@@ -334,7 +349,8 @@ where
             .and(Ok(buffer))
     }
 
-        fn read_hd_report(&mut self) -> Result<ExtHdReport, Error<E>> {
+    /// Read a high-resolution version of the button/axis data from the classic controller
+    fn read_hd_report(&mut self) -> Result<ExtHdReport, Error<E>> {
         let mut buffer: ExtHdReport = ExtHdReport::default();
         self.i2cdev
             .read(EXT_I2C_ADDR as u8, &mut buffer)
@@ -361,6 +377,11 @@ where
         Ok(())
     }
 
+    /// Switch the driver from standard to hi-resolution reporting
+    /// 
+    /// This enables the controllers high-resolution report data mode, which returns each
+    /// analogue axis as a u8, rather than packing smaller integers in a structure.
+    /// If your controllers supports this mode, you should use it. It is much better.
     pub fn enable_hires<D: DelayUs<u16>>(&mut self, delay: &mut D) -> Result<(), Error<E>> {
         self.set_register(0xFE, 0x03)?;
         delay.delay_us(INTERMESSAGE_DELAY_MICROSEC);
