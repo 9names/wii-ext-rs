@@ -216,7 +216,7 @@ fn decode_classic_hd_report(data: &[u8]) -> ClassicReading {
 }
 
 /// Relaxed/Center positions for each axis
-/// 
+///
 /// These are used to calculate the relative deflection of each access from their center point
 #[derive(Default)]
 pub struct CalibrationData {
@@ -306,7 +306,7 @@ where
     /// Since each device will have different tolerances, we take a snapshot of some analog data
     /// to use as the "baseline" center.
     fn update_calibration_data<D: DelayUs<u16>>(&mut self, delay: &mut D) -> Result<(), Error<E>> {
-        let data = self.read_blocking(delay)?;
+        let data = self.read_report_blocking(delay)?;
 
         self.calibration = CalibrationData {
             joysick_left_x: data.joysick_left_x,
@@ -378,7 +378,7 @@ where
     }
 
     /// Switch the driver from standard to hi-resolution reporting
-    /// 
+    ///
     /// This enables the controllers high-resolution report data mode, which returns each
     /// analogue axis as a u8, rather than packing smaller integers in a structure.
     /// If your controllers supports this mode, you should use it. It is much better.
@@ -404,7 +404,7 @@ where
     // 3 wii classic
     // 4 wii classic pro
     // IDs:
-    //pub const NUNCHUCK_ID: ExtReport = [0, 0, 164, 32, 0, 0];
+    // pub const NUNCHUCK_ID: ExtReport = [0, 0, 164, 32, 0, 0];
     // pub const CLASSIC_ID: ExtReport = [0, 0, 164, 32, 3, 1];
     // pub const PRO_ID:     ExtReport = [1, 0, 164, 32, 1, 1];
     pub fn identify_controller(&mut self) -> Result<u8, Error<E>> {
@@ -434,7 +434,8 @@ where
         Ok(())
     }
 
-    fn read_classic(&mut self) -> Result<ClassicReading, Error<E>> {
+    /// poll the controller for the latest data
+    fn read_classic_report(&mut self) -> Result<ClassicReading, Error<E>> {
         if self.hires {
             let buf = self.read_hd_report()?;
             ClassicReading::from_data(&buf).ok_or(Error::InvalidInputData)
@@ -444,29 +445,29 @@ where
         }
     }
 
-    /// Simple helper with no delay. Should work for testing, not sure if it will function on hardware
-    pub fn read_no_wait(&mut self) -> Result<ClassicReading, Error<E>> {
+    /// Simple read helper helper with no delay. Works for testing, not on real hardware
+    pub fn read_classic_no_wait(&mut self) -> Result<ClassicReading, Error<E>> {
         self.start_sample()?;
-        self.read_classic()
+        self.read_classic_report()
     }
 
     /// Simple blocking read helper that will start a sample, wait 10ms, then read the value
-    pub fn read_blocking<D: DelayUs<u16>>(
+    pub fn read_report_blocking<D: DelayUs<u16>>(
         &mut self,
         delay: &mut D,
     ) -> Result<ClassicReading, Error<E>> {
         self.start_sample()?;
         delay.delay_us(INTERMESSAGE_DELAY_MICROSEC);
-        self.read_classic()
+        self.read_classic_report()
     }
 
-    /// Do a read, convert the value to a calibrated one
-    pub fn read_blocking_calibrated<D: DelayUs<u16>>(
+    /// Do a read, and report axis values relative to calibration
+    pub fn read_blocking<D: DelayUs<u16>>(
         &mut self,
         delay: &mut D,
     ) -> Result<ClassicReadingCalibrated, Error<E>> {
         Ok(ClassicReadingCalibrated::new(
-            self.read_blocking(delay)?,
+            self.read_report_blocking(delay)?,
             &self.calibration,
         ))
     }
@@ -494,7 +495,7 @@ mod tests {
             hires: false,
             calibration: CalibrationData::default(),
         };
-        let report = nc.read_no_wait().unwrap();
+        let report = nc.read_classic_no_wait().unwrap();
         report.assert_digital_eq(ClassicReading::default());
     }
 
@@ -514,7 +515,7 @@ mod tests {
     //     ];
     //     let mock = i2c::Mock::new(&expectations);
     //     let mut nc = Classic { i2cdev: mock };
-    //     let report = nc.read().unwrap();
+    //     let report = nc.read_raw_no_wait().unwrap();
     //     report.assert_digital_eq(ClassicReading {
     //         button_a: true,
     //         ..Default::default()
@@ -536,7 +537,7 @@ mod tests {
                         hires: false,
                         calibration: CalibrationData::default()
                     };
-                    let report = nc.read_no_wait().unwrap();
+                    let report = nc.read_classic_no_wait().unwrap();
                     report.assert_digital_eq(ClassicReading {
                         $x: true,
                         ..Default::default()
