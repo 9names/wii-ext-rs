@@ -3,8 +3,8 @@ name = "wii-ext"
 version = "0.1.0"
 edition = "2021"
 authors = ["9names"]
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+repository = "https://github.com/9names/wii-ext-rs"
+license = "MIT OR Apache-2.0"
 
 [dependencies]
 embedded-hal = { version = "0.2.5", features = ["unproven"] }
