@@ -1,3 +1,9 @@
+// The nunchuk portion of this crate is derived from
+// https://github.com/rust-embedded/rust-i2cdev/blob/master/examples/nunchuck.rs
+// which is Copyright 2015, Paul Osborne <osbpau@gmail.com>
+//
+// All the bugs are Copyright 2021, 9names.
+
 use crate::ExtReport;
 use crate::EXT_I2C_ADDR;
 use crate::INTERMESSAGE_DELAY_MICROSEC;
