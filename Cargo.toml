@@ -1,5 +1,6 @@
 [package]
 name = "wii-ext"
+description = "Wiimote Extension Controller (nunchuk, classic controller) driver for Rust embedded-hal traits"
 version = "0.1.0"
 edition = "2021"
 authors = ["9names"]
