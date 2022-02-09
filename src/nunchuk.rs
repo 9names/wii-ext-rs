@@ -95,8 +95,6 @@ where
     }
 
     /// Send the init sequence to the Wii extension controller
-    ///
-    /// This could be a bit faster with DelayUs, but since you only init once we'll re-use delay_ms
     pub fn init<D: DelayUs<u16>>(&mut self, delay: &mut D) -> Result<(), Error<E>> {
         // These registers must be written to disable encryption.; the documentation is a bit
         // lacking but it appears this is some kind of handshake to
@@ -115,6 +113,7 @@ where
         Ok(())
     }
 
+    /// Read the button/axis data from the nunchuk
     fn read_nunchuk(&mut self) -> Result<NunchukReading, Error<E>> {
         let buf = self.read_report()?;
         NunchukReading::from_data(&buf).ok_or(Error::InvalidInputData)
