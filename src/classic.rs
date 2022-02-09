@@ -305,7 +305,7 @@ where
     ///
     /// Since each device will have different tolerances, we take a snapshot of some analog data
     /// to use as the "baseline" center.
-    fn update_calibration_data<D: DelayUs<u16>>(&mut self, delay: &mut D) -> Result<(), Error<E>> {
+    pub fn update_calibration<D: DelayUs<u16>>(&mut self, delay: &mut D) -> Result<(), Error<E>> {
         let data = self.read_report_blocking(delay)?;
 
         self.calibration = CalibrationData {
@@ -373,7 +373,7 @@ where
         delay.delay_us(INTERMESSAGE_DELAY_MICROSEC);
         self.set_register(0xFB, 0x00)?;
         delay.delay_us(INTERMESSAGE_DELAY_MICROSEC);
-        self.update_calibration_data(delay)?;
+        self.update_calibration(delay)?;
         Ok(())
     }
 
@@ -386,7 +386,7 @@ where
         self.set_register(0xFE, 0x03)?;
         delay.delay_us(INTERMESSAGE_DELAY_MICROSEC);
         self.hires = true;
-        self.update_calibration_data(delay)?;
+        self.update_calibration(delay)?;
         Ok(())
     }
 
