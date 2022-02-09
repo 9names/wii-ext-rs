@@ -44,9 +44,10 @@ fn main() {
         // or joystick axes
         let x = input.joysick_left_x;
         let y = input.joysick_left_y;
-        // the data structs optionally implement defmt::debug
+        // the data structs optionally support defmt::debug
+        // if you enable features=["defmt_print"]
         info!("{:?}", read);
-        // Calibration can be manually performed via
+        // Calibration can be manually performed as needed
         controller.update_calibration();
     }
 }
