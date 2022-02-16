@@ -55,7 +55,7 @@ fn main() {
 
 ## Status
 
-- Nunchuk is functional, no calibration yet
+- Nunchuk is supported
 - Classic controllers supported in regular and HD mode
 
 ## Support
