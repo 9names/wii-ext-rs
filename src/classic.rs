@@ -43,10 +43,10 @@ pub enum Error<E> {
 #[cfg_attr(feature = "defmt_print", derive(defmt::Format))]
 #[derive(Debug, Default)]
 pub struct ClassicReading {
-    pub joysick_left_x: u8,
-    pub joysick_left_y: u8,
-    pub joysick_right_x: u8,
-    pub joysick_right_y: u8,
+    pub joystick_left_x: u8,
+    pub joystick_left_y: u8,
+    pub joystick_right_x: u8,
+    pub joystick_right_y: u8,
     pub trigger_left: u8,
     pub trigger_right: u8,
     pub dpad_up: bool,
@@ -74,10 +74,10 @@ pub struct ClassicReading {
 #[cfg_attr(feature = "defmt_print", derive(defmt::Format))]
 #[derive(Debug, Default)]
 pub struct ClassicReadingCalibrated {
-    pub joysick_left_x: i8,
-    pub joysick_left_y: i8,
-    pub joysick_right_x: i8,
-    pub joysick_right_y: i8,
+    pub joystick_left_x: i8,
+    pub joystick_left_y: i8,
+    pub joystick_right_x: i8,
+    pub joystick_right_y: i8,
     pub trigger_left: i8,
     pub trigger_right: i8,
     pub dpad_up: bool,
@@ -107,10 +107,10 @@ impl ClassicReadingCalibrated {
         }
 
         ClassicReadingCalibrated {
-            joysick_left_x: ext_u8_sub(r.joysick_left_x, c.joysick_left_x),
-            joysick_left_y: ext_u8_sub(r.joysick_left_y, c.joysick_left_y),
-            joysick_right_x: ext_u8_sub(r.joysick_right_x, c.joysick_right_x),
-            joysick_right_y: ext_u8_sub(r.joysick_right_y, c.joysick_right_y),
+            joystick_left_x: ext_u8_sub(r.joystick_left_x, c.joystick_left_x),
+            joystick_left_y: ext_u8_sub(r.joystick_left_y, c.joystick_left_y),
+            joystick_right_x: ext_u8_sub(r.joystick_right_x, c.joystick_right_x),
+            joystick_right_y: ext_u8_sub(r.joystick_right_y, c.joystick_right_y),
             trigger_left: ext_u8_sub(r.trigger_left, c.trigger_left),
             trigger_right: ext_u8_sub(r.trigger_right, c.trigger_right),
             dpad_up: r.dpad_up,
@@ -145,14 +145,14 @@ fn decode_classic_report(data: &[u8]) -> ClassicReading {
     // 	4	BDR	BDD	BLT	B-	BH	B+	BRT	1
     // 	5	BZL	BB	BY	BA	BX	BZR	BDL	BDU
     ClassicReading {
-        joysick_left_x:   ClassicReading::scale_6bit_8bit(data[0] & 0b0011_1111),
-        joysick_left_y:   ClassicReading::scale_6bit_8bit(data[1] & 0b0011_1111),
-        joysick_right_x:  ClassicReading::scale_5bit_8bit(
+        joystick_left_x:   ClassicReading::scale_6bit_8bit(data[0] & 0b0011_1111),
+        joystick_left_y:   ClassicReading::scale_6bit_8bit(data[1] & 0b0011_1111),
+        joystick_right_x:  ClassicReading::scale_5bit_8bit(
             ((data[2] & 0b1000_0000) >> 7) &
             ((data[1] & 0b1100_0000) >> 5) &
             ((data[0] & 0b1100_0000) >> 3)
         ),
-        joysick_right_y:  ClassicReading::scale_6bit_8bit(data[2] & 0b0001_1111),
+        joystick_right_y:  ClassicReading::scale_6bit_8bit(data[2] & 0b0001_1111),
         trigger_left:     ClassicReading::scale_5bit_8bit(
             ((data[2] & 0b0110_0000) >> 2) &
             ((data[3] & 0b1110_0000) >> 5)
@@ -191,10 +191,10 @@ fn decode_classic_hd_report(data: &[u8]) -> ClassicReading {
     // 6      BDR  BDD  BLT  B-   BH   B+   BRT  1
     // 7      BZL  BB   BY   BA   BX   BZR  BDL  BDU
     ClassicReading {
-        joysick_left_x:   data[0],
-        joysick_right_x:  data[1],
-        joysick_left_y:   data[2],
-        joysick_right_y:  data[3],
+        joystick_left_x:   data[0],
+        joystick_right_x:  data[1],
+        joystick_left_y:   data[2],
+        joystick_right_y:  data[3],
         trigger_left:     data[4],
         trigger_right:    data[5],
         dpad_right:       data[6] & 0b1000_0000 == 0,
@@ -220,10 +220,10 @@ fn decode_classic_hd_report(data: &[u8]) -> ClassicReading {
 /// These are used to calculate the relative deflection of each access from their center point
 #[derive(Default)]
 pub struct CalibrationData {
-    pub joysick_left_x: u8,
-    pub joysick_left_y: u8,
-    pub joysick_right_x: u8,
-    pub joysick_right_y: u8,
+    pub joystick_left_x: u8,
+    pub joystick_left_y: u8,
+    pub joystick_right_x: u8,
+    pub joystick_right_y: u8,
     pub trigger_left: u8,
     pub trigger_right: u8,
 }
@@ -309,10 +309,10 @@ where
         let data = self.read_report_blocking(delay)?;
 
         self.calibration = CalibrationData {
-            joysick_left_x: data.joysick_left_x,
-            joysick_left_y: data.joysick_left_y,
-            joysick_right_x: data.joysick_right_x,
-            joysick_right_y: data.joysick_right_y,
+            joystick_left_x: data.joystick_left_x,
+            joystick_left_y: data.joystick_left_y,
+            joystick_right_x: data.joystick_right_x,
+            joystick_right_y: data.joystick_right_y,
             trigger_left: data.trigger_left,
             trigger_right: data.trigger_left,
         };

@@ -1,4 +1,4 @@
-# Rust Wiimote Extension-Controller (Nunchuck/classic controller) Driver
+# Rust Wiimote Extension-Controller (Nunchuk/classic controller) Driver
 
 This is a platform agnostic Rust driver for Wiimote Extension controllers (Nunchuk, Classic, Classic Pro, NES Classic, SNES Classic, and clones) using the [`embedded-hal`] traits.
 
