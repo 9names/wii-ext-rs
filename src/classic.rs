@@ -485,7 +485,7 @@ mod tests {
     /// Allow up to this range without it being an error
     const ZERO_SLOP: i8 = 5;
     /// Triggers are sloppier, or I accidentally pressed them during testing
-    const TRIGGER_SLOP:i8 = 25;
+    const TRIGGER_SLOP: i8 = 25;
     /// The max value at full deflection is ~100, but allow a bit less than that
     const AXIS_MAX: i8 = 90;
 
@@ -609,7 +609,7 @@ mod tests {
             // Calibration read
             Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
             Transaction::read(EXT_I2C_ADDR as u8, test_data::CLASSIC_IDLE.to_vec()),
-            // Input read
+            // Input readtest_data
             Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
             Transaction::read(EXT_I2C_ADDR as u8, test_data::CLASSIC_LJOY_L.to_vec()),
         ];
@@ -649,4 +649,93 @@ mod tests {
             input.trigger_right
         );
     }
+
+    macro_rules! assert_joysticks {
+        ( $x:ident, $y:ident,
+          $lxl:expr, $lxh:expr,
+          $lyl:expr, $lyh:expr,
+          $rxl:expr, $rxh:expr,
+          $ryl:expr, $ryh:expr,
+          $ltl:expr, $lth:expr,
+          $rtl:expr, $rth:expr
+        ) => {
+            paste! {
+                #[test]
+                 fn [<test_calibrated $y:lower>]()  {
+                    let expectations = vec![
+                        // Reset controller
+                        Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+                        // Init
+                        Transaction::write(EXT_I2C_ADDR as u8, vec![240, 85]),
+                        Transaction::write(EXT_I2C_ADDR as u8, vec![251, 0]),
+                        // Calibration read
+                        Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+                        Transaction::read(EXT_I2C_ADDR as u8, test_data::$x.to_vec()),
+                        // Input read
+                        Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+                        Transaction::read(EXT_I2C_ADDR as u8, test_data::$y.to_vec()),
+                    ];
+                    let i2c = i2c::Mock::new(&expectations);
+                    let mut delay = MockNoop::new();
+                    let mut classic = Classic::new(i2c, &mut delay).unwrap();
+                    let input = classic.read_blocking(&mut delay).unwrap();
+
+                    assert!(
+                        ($lxl..$lxh).contains(&input.joystick_left_x),
+                        "left_x = {}",
+                        input.joystick_left_x
+                    );
+                    assert!(
+                        ($lyl..$lyh).contains(&input.joystick_left_y),
+                        "left_y = {}",
+                        input.joystick_left_y
+                    );
+                    assert!(
+                        ($rxl..$rxh).contains(&input.joystick_right_x),
+                        "right_x = {}",
+                        input.joystick_right_x
+                    );
+                    assert!(
+                        ($ryl..$ryh).contains(&input.joystick_right_y),
+                        "right_y = {}",
+                        input.joystick_right_y
+                    );
+                    assert!(
+                        ($ltl..$lth).contains(&input.trigger_left),
+                        "trigger_left = {}",
+                        input.trigger_left
+                    );
+                    assert!(
+                        ($rtl..$rth).contains(&input.trigger_right),
+                        "trigger_right = {}",
+                        input.trigger_right
+                    );
+                }
+            }
+        };
+    }
+
+    // This is the equivalent of classic_calibrated_joy_left
+    #[rustfmt::skip]
+    assert_joysticks!(
+        CLASSIC_IDLE, CLASSIC_LJOY_L, // Set idle and test sample
+        i8::MIN, -AXIS_MAX, // acceptable range for left x axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for left y axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for right x axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for right y axis
+        -TRIGGER_SLOP, TRIGGER_SLOP, // acceptable range for left trigger
+        -TRIGGER_SLOP, TRIGGER_SLOP // // acceptable range for right trigger
+    );
+
+    // Left joystick moves right
+    #[rustfmt::skip]
+    assert_joysticks!(
+        CLASSIC_IDLE, CLASSIC_LJOY_R, // Set idle and test sample
+        AXIS_MAX, i8::MAX, // acceptable range for left x axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for left y axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for right x axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for right y axis
+        -TRIGGER_SLOP, TRIGGER_SLOP, // acceptable range for left trigger
+        -TRIGGER_SLOP, TRIGGER_SLOP // // acceptable range for right trigger
+    );
 }
