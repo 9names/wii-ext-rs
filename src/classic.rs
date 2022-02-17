@@ -937,4 +937,124 @@ mod tests {
             }
         };
     }
+    // HD versions of the classic controller tests
+    // Left joystick moves left
+    #[rustfmt::skip]
+    assert_joystick_hd!(
+        CLASSIC_HD_IDLE, CLASSIC_HD_LJOY_L, // Set idle and test sample
+        i8::MIN, -AXIS_MAX, // acceptable range for left x axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for left y axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for right x axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for right y axis
+        -TRIGGER_SLOP, TRIGGER_SLOP, // acceptable range for left trigger
+        -TRIGGER_SLOP, TRIGGER_SLOP // // acceptable range for right trigger
+    );
+
+    // Left joystick moves right
+    #[rustfmt::skip]
+    assert_joystick_hd!(
+        CLASSIC_HD_IDLE, CLASSIC_HD_LJOY_R, // Set idle and test sample
+        AXIS_MAX, i8::MAX, // acceptable range for left x axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for left y axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for right x axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for right y axis
+        -TRIGGER_SLOP, TRIGGER_SLOP, // acceptable range for left trigger
+        -TRIGGER_SLOP, TRIGGER_SLOP // // acceptable range for right trigger
+    );
+
+    // Left joystick moves down
+    #[rustfmt::skip]
+    assert_joystick_hd!(
+        CLASSIC_HD_IDLE, CLASSIC_HD_LJOY_D, // Set idle and test sample
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for left x axis
+        i8::MIN, -AXIS_MAX, // acceptable range for left y axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for right x axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for right y axis
+        -TRIGGER_SLOP, TRIGGER_SLOP, // acceptable range for left trigger
+        -TRIGGER_SLOP, TRIGGER_SLOP // // acceptable range for right trigger
+    );
+
+    // Left joystick moves up
+    #[rustfmt::skip]
+    assert_joystick_hd!(
+        CLASSIC_HD_IDLE, CLASSIC_HD_LJOY_U, // Set idle and test sample
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for left x axis
+        AXIS_MAX, i8::MAX, // acceptable range for left y axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for right x axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for right y axis
+        -TRIGGER_SLOP, TRIGGER_SLOP, // acceptable range for left trigger
+        -TRIGGER_SLOP, TRIGGER_SLOP // // acceptable range for right trigger
+    );
+
+    // Right joystick moves left
+    #[rustfmt::skip]
+    assert_joystick_hd!(
+        CLASSIC_HD_IDLE, CLASSIC_HD_RJOY_L, // Set idle and test sample
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for left x axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for left y axis
+        i8::MIN, -AXIS_MAX, // acceptable range for right x axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for right y axis
+        -TRIGGER_SLOP, TRIGGER_SLOP, // acceptable range for left trigger
+        -TRIGGER_SLOP, TRIGGER_SLOP // // acceptable range for right trigger
+    );
+
+    // Right joystick moves right
+    #[rustfmt::skip]
+    assert_joystick_hd!(
+        CLASSIC_HD_IDLE, CLASSIC_HD_RJOY_R, // Set idle and test sample
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for left x axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for left y axis
+        AXIS_MAX, i8::MAX, // acceptable range for right x axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for right y axis
+        -TRIGGER_SLOP, TRIGGER_SLOP, // acceptable range for left trigger
+        -TRIGGER_SLOP, TRIGGER_SLOP // // acceptable range for right trigger
+    );
+
+    // Right joystick moves down
+    #[rustfmt::skip]
+    assert_joystick_hd!(
+        CLASSIC_HD_IDLE, CLASSIC_HD_RJOY_D, // Set idle and test sample
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for left x axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for left y axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for right x axis
+        i8::MIN, -AXIS_MAX, // acceptable range for right y axis
+        -TRIGGER_SLOP, TRIGGER_SLOP, // acceptable range for left trigger
+        -TRIGGER_SLOP, TRIGGER_SLOP // // acceptable range for right trigger
+    );
+
+    // Right joystick moves up
+    #[rustfmt::skip]
+    assert_joystick_hd!(
+        CLASSIC_HD_IDLE, CLASSIC_HD_RJOY_U, // Set idle and test sample
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for left x axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for left y axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for right x axis
+        AXIS_MAX, i8::MAX, // acceptable range for right y axis
+        -TRIGGER_SLOP, TRIGGER_SLOP, // acceptable range for left trigger
+        -TRIGGER_SLOP, TRIGGER_SLOP // // acceptable range for right trigger
+    );
+
+    // Left trigger engage
+    #[rustfmt::skip]
+    assert_joystick_hd!(
+        CLASSIC_HD_IDLE, CLASSIC_HD_LTRIG, // Set idle and test sample
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for left x axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for left y axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for right x axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for right y axis
+        AXIS_MAX, i8::MAX, // acceptable range for left trigger
+        -TRIGGER_SLOP, TRIGGER_SLOP // // acceptable range for right trigger
+    );
+
+    // Right trigger engage
+    #[rustfmt::skip]
+    assert_joystick_hd!(
+        CLASSIC_HD_IDLE, CLASSIC_HD_RTRIG, // Set idle and test sample
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for left x axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for left y axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for right x axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for right y axis
+        -TRIGGER_SLOP, TRIGGER_SLOP, // acceptable range for left trigger
+        AXIS_MAX, i8::MAX // // acceptable range for right trigger
+    );
 }
