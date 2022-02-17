@@ -477,10 +477,15 @@ where
 mod tests {
     use super::*;
     use crate::test_data::{self, *};
+    use embedded_hal_mock::delay::MockNoop;
     use embedded_hal_mock::i2c::{self, Transaction};
     use paste::paste;
 
-    // TODO: work out how to test analogue values from joystick and gyro
+    /// There's a certain amount of slop around the center position.
+    /// Allow up to this range without it being an error
+    const ZERO_SLOP: i8 = 5;
+    /// The max value at full deflection is ~100, but allow a bit less than that
+    const AXIS_MAX: i8 = 90;
 
     /// Test that no buttons are pressed when the controller is idle
     #[test]
@@ -563,4 +568,68 @@ mod tests {
     assert_button_fn!(button_minus, CLASSIC_BTN_MINUS);
     assert_button_fn!(button_plus, CLASSIC_BTN_PLUS);
     assert_button_fn!(button_home, CLASSIC_BTN_HOME);
+
+    /// Test that no buttons are pressed when the controller is idle
+    #[test]
+    fn classic_calibrated_idle() {
+        let expectations = vec![
+            // Reset controller
+            Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+            // Init
+            Transaction::write(EXT_I2C_ADDR as u8, vec![240, 85]),
+            Transaction::write(EXT_I2C_ADDR as u8, vec![251, 0]),
+            // Calibration read
+            Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+            Transaction::read(EXT_I2C_ADDR as u8, test_data::CLASSIC_IDLE.to_vec()),
+            // Input read
+            Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+            Transaction::read(EXT_I2C_ADDR as u8, test_data::CLASSIC_IDLE.to_vec()),
+        ];
+        let i2c = i2c::Mock::new(&expectations);
+        let mut delay = MockNoop::new();
+        let mut classic = Classic::new(i2c, &mut delay).unwrap();
+        let input = classic.read_blocking(&mut delay).unwrap();
+        assert_eq!(input.joystick_left_x, 0);
+        assert_eq!(input.joystick_left_y, 0);
+        assert_eq!(input.joystick_right_x, 0);
+        assert_eq!(input.joystick_right_y, 0);
+    }
+
+    /// Test that no buttons are pressed when the controller is idle
+    #[test]
+    fn classic_calibrated_joy_left() {
+        let expectations = vec![
+            // Reset controller
+            Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+            // Init
+            Transaction::write(EXT_I2C_ADDR as u8, vec![240, 85]),
+            Transaction::write(EXT_I2C_ADDR as u8, vec![251, 0]),
+            // Calibration read
+            Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+            Transaction::read(EXT_I2C_ADDR as u8, test_data::CLASSIC_IDLE.to_vec()),
+            // Input read
+            Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+            Transaction::read(EXT_I2C_ADDR as u8, test_data::CLASSIC_LJOY_L.to_vec()),
+        ];
+        let i2c = i2c::Mock::new(&expectations);
+        let mut delay = MockNoop::new();
+        let mut classic = Classic::new(i2c, &mut delay).unwrap();
+        let input = classic.read_blocking(&mut delay).unwrap();
+        assert!(input.joystick_left_x < -AXIS_MAX);
+        assert!(
+            (-ZERO_SLOP..ZERO_SLOP).contains(&input.joystick_left_y),
+            "left_y = {}",
+            input.joystick_left_y
+        );
+        assert!(
+            (-ZERO_SLOP..ZERO_SLOP).contains(&input.joystick_right_x),
+            "right_x = {}",
+            input.joystick_right_x
+        );
+        assert!(
+            (-ZERO_SLOP..ZERO_SLOP).contains(&input.joystick_right_y),
+            "right_y = {}",
+            input.joystick_right_y
+        );
+    }
 }
