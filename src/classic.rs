@@ -827,4 +827,28 @@ mod tests {
         -TRIGGER_SLOP, TRIGGER_SLOP, // acceptable range for left trigger
         -TRIGGER_SLOP, TRIGGER_SLOP // // acceptable range for right trigger
     );
+
+    // Left trigger engage
+    #[rustfmt::skip]
+    assert_joysticks!(
+        CLASSIC_IDLE, CLASSIC_LTRIG, // Set idle and test sample
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for left x axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for left y axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for right x axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for right y axis
+        AXIS_MAX, i8::MAX, // acceptable range for left trigger
+        -TRIGGER_SLOP, TRIGGER_SLOP // // acceptable range for right trigger
+    );
+
+    // Right trigger engage
+    #[rustfmt::skip]
+    assert_joysticks!(
+        CLASSIC_IDLE, CLASSIC_RTRIG, // Set idle and test sample
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for left x axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for left y axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for right x axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for right y axis
+        -TRIGGER_SLOP, TRIGGER_SLOP, // acceptable range for left trigger
+        AXIS_MAX, i8::MAX // // acceptable range for right trigger
+    );
 }
