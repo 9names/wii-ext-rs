@@ -617,6 +617,11 @@ mod tests {
         let input = classic.read_blocking(&mut delay).unwrap();
         assert!(input.joystick_left_x < -AXIS_MAX);
         assert!(
+            (i8::MIN..-AXIS_MAX).contains(&input.joystick_left_x),
+            "left_x = {}",
+            input.joystick_left_x
+        );
+        assert!(
             (-ZERO_SLOP..ZERO_SLOP).contains(&input.joystick_left_y),
             "left_y = {}",
             input.joystick_left_y
