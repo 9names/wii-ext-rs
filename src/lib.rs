@@ -15,5 +15,5 @@ pub const EXT_I2C_ADDR: u16 = 0x52;
 /// 200 microseconds works in my tests - need to test with more devices
 pub const INTERMESSAGE_DELAY_MICROSEC: u16 = 200;
 
-#[cfg(test)]
-mod test_data;
+// #[cfg(test)]
+pub mod test_data;
