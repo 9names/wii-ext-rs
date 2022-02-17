@@ -484,6 +484,8 @@ mod tests {
     /// There's a certain amount of slop around the center position.
     /// Allow up to this range without it being an error
     const ZERO_SLOP: i8 = 5;
+    /// Triggers are sloppier, or I accidentally pressed them during testing
+    const TRIGGER_SLOP:i8 = 25;
     /// The max value at full deflection is ~100, but allow a bit less than that
     const AXIS_MAX: i8 = 90;
 
@@ -615,7 +617,7 @@ mod tests {
         let mut delay = MockNoop::new();
         let mut classic = Classic::new(i2c, &mut delay).unwrap();
         let input = classic.read_blocking(&mut delay).unwrap();
-        assert!(input.joystick_left_x < -AXIS_MAX);
+
         assert!(
             (i8::MIN..-AXIS_MAX).contains(&input.joystick_left_x),
             "left_x = {}",
@@ -635,6 +637,16 @@ mod tests {
             (-ZERO_SLOP..ZERO_SLOP).contains(&input.joystick_right_y),
             "right_y = {}",
             input.joystick_right_y
+        );
+        assert!(
+            (-TRIGGER_SLOP..TRIGGER_SLOP).contains(&input.trigger_left),
+            "trigger_left = {}",
+            input.trigger_left
+        );
+        assert!(
+            (-TRIGGER_SLOP..TRIGGER_SLOP).contains(&input.trigger_right),
+            "trigger_right = {}",
+            input.trigger_right
         );
     }
 }
