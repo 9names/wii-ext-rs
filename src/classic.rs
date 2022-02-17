@@ -851,4 +851,90 @@ mod tests {
         -TRIGGER_SLOP, TRIGGER_SLOP, // acceptable range for left trigger
         AXIS_MAX, i8::MAX // // acceptable range for right trigger
     );
+
+    macro_rules! assert_joystick_hd {
+        ( $x:ident, $y:ident,
+          $lxl:expr, $lxh:expr,
+          $lyl:expr, $lyh:expr,
+          $rxl:expr, $rxh:expr,
+          $ryl:expr, $ryh:expr,
+          $ltl:expr, $lth:expr,
+          $rtl:expr, $rth:expr
+        ) => {
+            paste! {
+                #[test]
+                 fn [<test_calibrated_hd_ $y:lower>]()  {
+                    let expectations = vec![
+                        // Reset controller
+                        Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+                        // Init
+                        Transaction::write(EXT_I2C_ADDR as u8, vec![240, 85]),
+                        Transaction::write(EXT_I2C_ADDR as u8, vec![251, 0]),
+
+                        // Calibration read (discarded - use any data)
+                        Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+                        Transaction::read(EXT_I2C_ADDR as u8, test_data::CLASSIC_IDLE.to_vec()),
+                        
+                        // Switch to HD mode
+                        Transaction::write(EXT_I2C_ADDR as u8, vec![254, 3]),
+                        
+                        // HD-Mode Calibration read
+                        Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+                        Transaction::read(EXT_I2C_ADDR as u8, test_data::$x.to_vec()),
+                        // Input read
+                        Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+                        Transaction::read(EXT_I2C_ADDR as u8, test_data::$y.to_vec()),
+                    ];
+                    let i2c = i2c::Mock::new(&expectations);
+                    let mut delay = MockNoop::new();
+                    let mut classic = Classic::new(i2c, &mut delay).unwrap();
+                    classic.enable_hires(&mut delay).unwrap();
+                    let input = classic.read_blocking(&mut delay).unwrap();
+
+                    assert!(
+                        ($lxl..=$lxh).contains(&input.joystick_left_x),
+                        "left_x = {}, expected between {} and {}",
+                        input.joystick_left_x,
+                        $lxl,
+                        $lxh
+                    );
+                    assert!(
+                        ($lyl..=$lyh).contains(&input.joystick_left_y),
+                        "left_y = {}, expected between {} and {}",
+                        input.joystick_left_y,
+                        $lyl,
+                        $lyh
+                    );
+                    assert!(
+                        ($rxl..=$rxh).contains(&input.joystick_right_x),
+                        "right_x = {}, expected between {} and {}",
+                        input.joystick_right_x,
+                        $rxl,
+                        $rxh
+                    );
+                    assert!(
+                        ($ryl..=$ryh).contains(&input.joystick_right_y),
+                        "right_y = {}, expected between {} and {}",
+                        input.joystick_right_y,
+                        $ryl,
+                        $ryh
+                    );
+                    assert!(
+                        ($ltl..=$lth).contains(&input.trigger_left),
+                        "trigger_left = {}, expected between {} and {}",
+                        input.trigger_left,
+                        $ltl,
+                        $lth
+                    );
+                    assert!(
+                        ($rtl..=$rth).contains(&input.trigger_right),
+                        "trigger_right = {}, expected between {} and {}",
+                        input.trigger_right,
+                        $rtl,
+                        $rth
+                    );
+                }
+            }
+        };
+    }
 }
