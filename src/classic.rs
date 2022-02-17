@@ -489,6 +489,10 @@ mod tests {
     /// The max value at full deflection is ~100, but allow a bit less than that
     const AXIS_MAX: i8 = 90;
 
+    /// The max value for the right stick is greatly reduced?
+    /// Need to retest in hi-resolution
+    const R_AXIS_MAX: i8 = 45;
+
     /// Test that no buttons are pressed when the controller is idle
     #[test]
     fn classic_idle() {
@@ -661,7 +665,7 @@ mod tests {
         ) => {
             paste! {
                 #[test]
-                 fn [<test_calibrated $y:lower>]()  {
+                 fn [<test_calibrated_ $y:lower>]()  {
                     let expectations = vec![
                         // Reset controller
                         Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
@@ -681,34 +685,46 @@ mod tests {
                     let input = classic.read_blocking(&mut delay).unwrap();
 
                     assert!(
-                        ($lxl..$lxh).contains(&input.joystick_left_x),
-                        "left_x = {}",
-                        input.joystick_left_x
+                        ($lxl..=$lxh).contains(&input.joystick_left_x),
+                        "left_x = {}, expected between {} and {}",
+                        input.joystick_left_x,
+                        $lxl,
+                        $lxh
                     );
                     assert!(
-                        ($lyl..$lyh).contains(&input.joystick_left_y),
-                        "left_y = {}",
-                        input.joystick_left_y
+                        ($lyl..=$lyh).contains(&input.joystick_left_y),
+                        "left_y = {}, expected between {} and {}",
+                        input.joystick_left_y,
+                        $lyl,
+                        $lyh
                     );
                     assert!(
-                        ($rxl..$rxh).contains(&input.joystick_right_x),
-                        "right_x = {}",
-                        input.joystick_right_x
+                        ($rxl..=$rxh).contains(&input.joystick_right_x),
+                        "right_x = {}, expected between {} and {}",
+                        input.joystick_right_x,
+                        $rxl,
+                        $rxh
                     );
                     assert!(
-                        ($ryl..$ryh).contains(&input.joystick_right_y),
-                        "right_y = {}",
-                        input.joystick_right_y
+                        ($ryl..=$ryh).contains(&input.joystick_right_y),
+                        "right_y = {}, expected between {} and {}",
+                        input.joystick_right_y,
+                        $ryl,
+                        $ryh
                     );
                     assert!(
-                        ($ltl..$lth).contains(&input.trigger_left),
-                        "trigger_left = {}",
-                        input.trigger_left
+                        ($ltl..=$lth).contains(&input.trigger_left),
+                        "trigger_left = {}, expected between {} and {}",
+                        input.trigger_left,
+                        $ltl,
+                        $lth
                     );
                     assert!(
-                        ($rtl..$rth).contains(&input.trigger_right),
-                        "trigger_right = {}",
-                        input.trigger_right
+                        ($rtl..=$rth).contains(&input.trigger_right),
+                        "trigger_right = {}, expected between {} and {}",
+                        input.trigger_right,
+                        $rtl,
+                        $rth
                     );
                 }
             }
@@ -716,6 +732,7 @@ mod tests {
     }
 
     // This is the equivalent of classic_calibrated_joy_left
+    // Left joystick moves left
     #[rustfmt::skip]
     assert_joysticks!(
         CLASSIC_IDLE, CLASSIC_LJOY_L, // Set idle and test sample
@@ -735,6 +752,78 @@ mod tests {
         -ZERO_SLOP, ZERO_SLOP, // acceptable range for left y axis
         -ZERO_SLOP, ZERO_SLOP, // acceptable range for right x axis
         -ZERO_SLOP, ZERO_SLOP, // acceptable range for right y axis
+        -TRIGGER_SLOP, TRIGGER_SLOP, // acceptable range for left trigger
+        -TRIGGER_SLOP, TRIGGER_SLOP // // acceptable range for right trigger
+    );
+
+    // Left joystick moves down
+    #[rustfmt::skip]
+    assert_joysticks!(
+        CLASSIC_IDLE, CLASSIC_LJOY_D, // Set idle and test sample
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for left x axis
+        i8::MIN, -AXIS_MAX, // acceptable range for left y axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for right x axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for right y axis
+        -TRIGGER_SLOP, TRIGGER_SLOP, // acceptable range for left trigger
+        -TRIGGER_SLOP, TRIGGER_SLOP // // acceptable range for right trigger
+    );
+
+    // Left joystick moves up
+    #[rustfmt::skip]
+    assert_joysticks!(
+        CLASSIC_IDLE, CLASSIC_LJOY_U, // Set idle and test sample
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for left x axis
+        AXIS_MAX, i8::MAX, // acceptable range for left y axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for right x axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for right y axis
+        -TRIGGER_SLOP, TRIGGER_SLOP, // acceptable range for left trigger
+        -TRIGGER_SLOP, TRIGGER_SLOP // // acceptable range for right trigger
+    );
+
+    // Right joystick moves left
+    #[rustfmt::skip]
+    assert_joysticks!(
+        CLASSIC_IDLE, CLASSIC_RJOY_L, // Set idle and test sample
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for left x axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for left y axis
+        i8::MIN, -AXIS_MAX, // acceptable range for right x axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for right y axis
+        -TRIGGER_SLOP, TRIGGER_SLOP, // acceptable range for left trigger
+        -TRIGGER_SLOP, TRIGGER_SLOP // // acceptable range for right trigger
+    );
+
+    // Right joystick moves right
+    #[rustfmt::skip]
+    assert_joysticks!(
+        CLASSIC_IDLE, CLASSIC_RJOY_R, // Set idle and test sample
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for left x axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for left y axis
+        AXIS_MAX, i8::MAX, // acceptable range for right x axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for right y axis
+        -TRIGGER_SLOP, TRIGGER_SLOP, // acceptable range for left trigger
+        -TRIGGER_SLOP, TRIGGER_SLOP // // acceptable range for right trigger
+    );
+
+    // Right joystick moves down
+    #[rustfmt::skip]
+    assert_joysticks!(
+        CLASSIC_IDLE, CLASSIC_RJOY_D, // Set idle and test sample
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for left x axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for left y axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for right x axis
+        i8::MIN, -R_AXIS_MAX, // acceptable range for right y axis
+        -TRIGGER_SLOP, TRIGGER_SLOP, // acceptable range for left trigger
+        -TRIGGER_SLOP, TRIGGER_SLOP // // acceptable range for right trigger
+    );
+
+    // Right joystick moves up
+    #[rustfmt::skip]
+    assert_joysticks!(
+        CLASSIC_IDLE, CLASSIC_RJOY_U, // Set idle and test sample
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for left x axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for left y axis
+        -ZERO_SLOP, ZERO_SLOP, // acceptable range for right x axis
+        R_AXIS_MAX, i8::MAX, // acceptable range for right y axis
         -TRIGGER_SLOP, TRIGGER_SLOP, // acceptable range for left trigger
         -TRIGGER_SLOP, TRIGGER_SLOP // // acceptable range for right trigger
     );
