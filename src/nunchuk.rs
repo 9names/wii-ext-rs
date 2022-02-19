@@ -172,11 +172,14 @@ where
         // These registers must be written to disable encryption.; the documentation is a bit
         // lacking but it appears this is some kind of handshake to
         // perform unencrypted data tranfers
+        // Double all the delays here, we sometimes get connection issues otherwise
+        delay.delay_us(INTERMESSAGE_DELAY_MICROSEC * 2);
         self.set_register(0xF0, 0x55)?;
-        delay.delay_us(INTERMESSAGE_DELAY_MICROSEC);
+        delay.delay_us(INTERMESSAGE_DELAY_MICROSEC * 2);
         self.set_register(0xFB, 0x00)?;
-        delay.delay_us(INTERMESSAGE_DELAY_MICROSEC);
+        delay.delay_us(INTERMESSAGE_DELAY_MICROSEC * 2);
         self.update_calibration(delay)?;
+        delay.delay_us(INTERMESSAGE_DELAY_MICROSEC * 2);
         Ok(())
     }
 
@@ -212,6 +215,7 @@ where
         &mut self,
         delay: &mut D,
     ) -> Result<NunchukReading, Error<E>> {
+        delay.delay_us(INTERMESSAGE_DELAY_MICROSEC);
         self.start_sample()?;
         delay.delay_us(INTERMESSAGE_DELAY_MICROSEC);
         self.read_nunchuk()

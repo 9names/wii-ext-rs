@@ -365,13 +365,16 @@ where
         // This is described at https://wiibrew.org/wiki/Wiimote/Extension_Controllers#The_New_Way
 
         // Reset to base register first - this should recover a controller in a weird state.
+        // Use longer delays here than normal reads - the system seems more unreliable performing these commands
+        delay.delay_us(INTERMESSAGE_DELAY_MICROSEC * 2);
         self.set_read_register_address(0)?;
-        delay.delay_us(INTERMESSAGE_DELAY_MICROSEC);
+        delay.delay_us(INTERMESSAGE_DELAY_MICROSEC * 2);
         self.set_register(0xF0, 0x55)?;
-        delay.delay_us(INTERMESSAGE_DELAY_MICROSEC);
+        delay.delay_us(INTERMESSAGE_DELAY_MICROSEC * 2);
         self.set_register(0xFB, 0x00)?;
-        delay.delay_us(INTERMESSAGE_DELAY_MICROSEC);
+        delay.delay_us(INTERMESSAGE_DELAY_MICROSEC * 2);
         self.update_calibration(delay)?;
+        delay.delay_us(INTERMESSAGE_DELAY_MICROSEC * 2);
         Ok(())
     }
 
@@ -381,8 +384,9 @@ where
     /// analogue axis as a u8, rather than packing smaller integers in a structure.
     /// If your controllers supports this mode, you should use it. It is much better.
     pub fn enable_hires<D: DelayUs<u16>>(&mut self, delay: &mut D) -> Result<(), Error<E>> {
+        delay.delay_us(INTERMESSAGE_DELAY_MICROSEC * 2);
         self.set_register(0xFE, 0x03)?;
-        delay.delay_us(INTERMESSAGE_DELAY_MICROSEC);
+        delay.delay_us(INTERMESSAGE_DELAY_MICROSEC * 2);
         self.hires = true;
         self.update_calibration(delay)?;
         Ok(())
@@ -393,9 +397,14 @@ where
     /// This disables the controllers high-resolution report data mode
     /// It is assumed that all controllers use 0x01 as the 'standard' mode.
     /// This has only been confirmed for classic and pro-classic controller.
-    pub fn disable_hires<D: DelayUs<u16>>(&mut self, delay: &mut D) -> Result<(), Error<E>> {
+    ///
+    /// This function does not work.
+    /// TODO: work out why, make it public when it works
+    #[allow(dead_code)]
+    fn disable_hires<D: DelayUs<u16>>(&mut self, delay: &mut D) -> Result<(), Error<E>> {
+        delay.delay_us(INTERMESSAGE_DELAY_MICROSEC * 2);
         self.set_register(0xFE, 0x01)?;
-        delay.delay_us(INTERMESSAGE_DELAY_MICROSEC);
+        delay.delay_us(INTERMESSAGE_DELAY_MICROSEC * 2);
         self.hires = false;
         self.update_calibration(delay)?;
         Ok(())
