@@ -4,13 +4,12 @@
 //
 // All the bugs are Copyright 2021, 9names.
 
+// TODO: nunchuk technically supports HD report, but the last two bytes will be zeroes
+// work out if it's worth supporting that
+
 use crate::ExtReport;
 use crate::EXT_I2C_ADDR;
 use crate::INTERMESSAGE_DELAY_MICROSEC;
-// nunchuk technically supports HD report, but the last two bytes will be zeroes
-// TODO: work out if it's worth supporting that
-// TODO: add support for the
-// use crate::ExtHdReport;
 use embedded_hal::blocking::delay::DelayUs;
 
 #[cfg(feature = "defmt_print")]
