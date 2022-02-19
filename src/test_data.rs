@@ -104,6 +104,7 @@ pub const CLASSIC_HD_BTN_X: ExtHdReport = [132, 128, 131, 137, 31, 26, 255, 247]
 
 // wii classic pro joystick
 pub const PRO_ID: ExtReport = [1, 0, 164, 32, 1, 1];
+pub const PRO_HIRES_DEFAULT: u8 = 1;
 pub const PRO_IDLE: ExtReport = [160, 31, 17, 0, 255, 255];
 pub const PRO_BTN_B: ExtReport = [160, 31, 17, 0, 255, 191];
 pub const PRO_BTN_A: ExtReport = [160, 31, 17, 0, 255, 239];
@@ -128,7 +129,16 @@ pub const PRO_RJOY_U: ExtReport = [160, 31, 30, 0, 255, 255];
 pub const PRO_RJOY_D: ExtReport = [160, 31, 4, 0, 255, 255];
 pub const PRO_RJOY_L: ExtReport = [32, 95, 17, 0, 255, 255];
 pub const PRO_RJOY_R: ExtReport = [224, 159, 145, 0, 255, 255];
+pub const PRO_LJOY_UR: ExtReport = [180, 48, 17, 0, 255, 255];
+pub const PRO_LJOY_DR: ExtReport = [179, 12, 17, 0, 255, 255];
+pub const PRO_LJOY_DL: ExtReport = [139, 11, 17, 0, 255, 255];
+pub const PRO_LJOY_UL: ExtReport = [139, 50, 17, 0, 255, 255];
+pub const PRO_RJOY_UR: ExtReport = [224, 95, 27, 0, 255, 255];
+pub const PRO_RJOY_DR: ExtReport = [224, 95, 7, 0, 255, 255];
+pub const PRO_RJOY_DL: ExtReport = [32, 223, 7, 0, 255, 255];
+pub const PRO_RJOY_UL: ExtReport = [32, 223, 27, 0, 255, 255];
 pub const PRO_HD_IDLE: ExtHdReport = [127, 129, 123, 136, 0, 0, 255, 255];
+
 // No analog triggers on pro controller
 //pub const PRO_LTRIG: ExtReport = [];
 //pub const PRO_RTRIG: ExtReport = [];
