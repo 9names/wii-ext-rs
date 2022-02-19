@@ -250,15 +250,13 @@ impl ClassicReading {
     /// Some axis' data is u5, scale it to u8 for convenience
     fn scale_5bit_8bit(reading: u8) -> u8 {
         // TODO: better math here, move this somewhere common
-        // For now, accept a bit of reduced range
-        reading * 8
+        ((reading as u32 * u8::MAX as u32) / 31) as u8
     }
 
     /// Some axis' data is u6, scale it to u8 for convenience
     fn scale_6bit_8bit(reading: u8) -> u8 {
         // TODO: better math here, move this somewhere common
-        // For now, accept a bit of reduced range
-        reading * 4
+        ((reading as u32 * u8::MAX as u32) / 63) as u8
     }
 
     /// Convert from a wii-ext report into controller data
