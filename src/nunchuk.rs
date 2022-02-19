@@ -38,8 +38,8 @@ pub struct NunchukReading {
     pub accel_x: u16, // 10-bit
     pub accel_y: u16, // 10-bit
     pub accel_z: u16, // 10-bit
-    pub c_button_pressed: bool,
-    pub z_button_pressed: bool,
+    pub button_c: bool,
+    pub button_z: bool,
 }
 
 impl NunchukReading {
@@ -53,8 +53,8 @@ impl NunchukReading {
                 accel_x: (u16::from(data[2]) << 2) | ((u16::from(data[5]) >> 6) & 0b11),
                 accel_y: (u16::from(data[3]) << 2) | ((u16::from(data[5]) >> 4) & 0b11),
                 accel_z: (u16::from(data[4]) << 2) | ((u16::from(data[5]) >> 2) & 0b11),
-                c_button_pressed: (data[5] & 0b10) == 0,
-                z_button_pressed: (data[5] & 0b01) == 0,
+                button_c: (data[5] & 0b10) == 0,
+                button_z: (data[5] & 0b01) == 0,
             })
         }
     }
@@ -84,8 +84,8 @@ pub struct NunchukReadingCalibrated {
     pub accel_x: u16, // 10-bit
     pub accel_y: u16, // 10-bit
     pub accel_z: u16, // 10-bit
-    pub c_button_pressed: bool,
-    pub z_button_pressed: bool,
+    pub button_c: bool,
+    pub button_z: bool,
 }
 
 impl NunchukReadingCalibrated {
@@ -103,8 +103,8 @@ impl NunchukReadingCalibrated {
             accel_x: r.accel_x,
             accel_y: r.accel_y, // 10-bit
             accel_z: r.accel_z, // 10-bit
-            c_button_pressed: r.c_button_pressed,
-            z_button_pressed: r.z_button_pressed,
+            button_c: r.button_c,
+            button_z: r.button_z,
         }
     }
 }
@@ -138,7 +138,7 @@ where
     /// Since each device will have different tolerances, we take a snapshot of some analog data
     /// to use as the "baseline" center.
     pub fn update_calibration<D: DelayUs<u16>>(&mut self, delay: &mut D) -> Result<(), Error<E>> {
-        let data = self.read_blocking(delay)?;
+        let data = self.read_report_blocking(delay)?;
 
         self.calibration = CalibrationData {
             joystick_x: data.joystick_x,
@@ -207,8 +207,8 @@ where
         ))
     }
 
-    /// Simple blocking read helper that will start a sample, wait 10ms, then read the value
-    pub fn read_blocking<D: DelayUs<u16>>(
+    /// Simple blocking read helper that will start a sample, wait `INTERMESSAGE_DELAY_MICROSEC`, then read the value
+    pub fn read_report_blocking<D: DelayUs<u16>>(
         &mut self,
         delay: &mut D,
     ) -> Result<NunchukReading, Error<E>> {
@@ -218,12 +218,12 @@ where
     }
 
     /// Do a read, and report axis values relative to calibration
-    pub fn read_blocking_calibrated<D: DelayUs<u16>>(
+    pub fn read_blocking<D: DelayUs<u16>>(
         &mut self,
         delay: &mut D,
     ) -> Result<NunchukReadingCalibrated, Error<E>> {
         Ok(NunchukReadingCalibrated::new(
-            self.read_blocking(delay)?,
+            self.read_report_blocking(delay)?,
             &self.calibration,
         ))
     }
@@ -254,8 +254,8 @@ mod tests {
             calibration: CalibrationData::default(),
         };
         let report = nc.read_no_wait().unwrap();
-        assert!(!report.c_button_pressed);
-        assert!(!report.z_button_pressed);
+        assert!(!report.button_c);
+        assert!(!report.button_z);
     }
 
     #[test]
@@ -274,8 +274,8 @@ mod tests {
             },
         };
         let report = nc.read_calibrated_no_wait().unwrap();
-        assert!(!report.c_button_pressed);
-        assert!(!report.z_button_pressed);
+        assert!(!report.button_c);
+        assert!(!report.button_z);
         assert_eq!(report.joystick_x, 0);
         assert_eq!(report.joystick_y, 0);
     }
@@ -296,8 +296,8 @@ mod tests {
             },
         };
         let report = nc.read_calibrated_no_wait().unwrap();
-        assert!(!report.c_button_pressed);
-        assert!(!report.z_button_pressed);
+        assert!(!report.button_c);
+        assert!(!report.button_z);
         assert!(report.joystick_x < -AXIS_MAX, "x = {}", report.joystick_x);
         assert!(report.joystick_y > -ZERO_SLOP, "y = {}", report.joystick_y);
         assert!(report.joystick_y < ZERO_SLOP, "y = {}", report.joystick_y);
@@ -319,8 +319,8 @@ mod tests {
             },
         };
         let report = nc.read_calibrated_no_wait().unwrap();
-        assert!(!report.c_button_pressed);
-        assert!(!report.z_button_pressed);
+        assert!(!report.button_c);
+        assert!(!report.button_z);
         assert!(report.joystick_x > AXIS_MAX, "x = {}", report.joystick_x);
         assert!(report.joystick_y > -ZERO_SLOP, "y = {}", report.joystick_y);
         assert!(report.joystick_y < ZERO_SLOP, "y = {}", report.joystick_y);
@@ -342,8 +342,8 @@ mod tests {
             },
         };
         let report = nc.read_calibrated_no_wait().unwrap();
-        assert!(!report.c_button_pressed);
-        assert!(!report.z_button_pressed);
+        assert!(!report.button_c);
+        assert!(!report.button_z);
         assert!(report.joystick_y > AXIS_MAX, "y = {}", report.joystick_y);
         assert!(report.joystick_x > -ZERO_SLOP, "x = {}", report.joystick_x);
         assert!(report.joystick_x < ZERO_SLOP, "x = {}", report.joystick_x);
@@ -365,8 +365,8 @@ mod tests {
             },
         };
         let report = nc.read_calibrated_no_wait().unwrap();
-        assert!(!report.c_button_pressed);
-        assert!(!report.z_button_pressed);
+        assert!(!report.button_c);
+        assert!(!report.button_z);
         assert!(report.joystick_y < -AXIS_MAX, "y = {}", report.joystick_y);
         assert!(report.joystick_x > -ZERO_SLOP, "x = {}", report.joystick_x);
         assert!(report.joystick_x < ZERO_SLOP, "x = {}", report.joystick_x);
@@ -386,11 +386,11 @@ mod tests {
             calibration: CalibrationData::default(),
         };
         let report = nc.read_no_wait().unwrap();
-        assert!(!report.c_button_pressed);
-        assert!(!report.z_button_pressed);
+        assert!(!report.button_c);
+        assert!(!report.button_z);
         let report = nc.read_no_wait().unwrap();
-        assert!(!report.c_button_pressed);
-        assert!(!report.z_button_pressed);
+        assert!(!report.button_c);
+        assert!(!report.button_z);
     }
 
     #[test]
@@ -405,8 +405,8 @@ mod tests {
             calibration: CalibrationData::default(),
         };
         let report = nc.read_no_wait().unwrap();
-        assert!(report.c_button_pressed);
-        assert!(!report.z_button_pressed);
+        assert!(report.button_c);
+        assert!(!report.button_z);
     }
 
     #[test]
@@ -421,7 +421,7 @@ mod tests {
             calibration: CalibrationData::default(),
         };
         let report = nc.read_no_wait().unwrap();
-        assert!(!report.c_button_pressed);
-        assert!(report.z_button_pressed);
+        assert!(!report.button_c);
+        assert!(report.button_z);
     }
 }
