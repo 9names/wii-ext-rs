@@ -42,8 +42,8 @@ fn main() {
         let a = input.button_a;
         let b = input.button_b;
         // or joystick axes
-        let x = input.joysick_left_x;
-        let y = input.joysick_left_y;
+        let x = input.joystick_left_x;
+        let y = input.joystick_left_y;
         // the data structs optionally support defmt::debug
         // if you enable features=["defmt_print"]
         info!("{:?}", read);
