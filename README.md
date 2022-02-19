@@ -33,10 +33,16 @@ fn main() {
     let i2c = I2C::new(); // insert your HAL i2c init here
     let mut delay = cortex_m::delay::Delay::new(); // some delay source as well
     // Create, initialise and calibrate the controller
+    // You could use Nunchuk::new() instead of Classic::new() here
     let mut controller = Classic::new(i2c, &mut delay).unwrap();
     // Enable hi-resolution mode. This also updates calibration
+    // Only supported for Classic controllers
     controller.enable_hires(&mut delay).unwrap();
     loop {
+        // read_blocking returns calibrated data: joysticks and
+        // triggers will return signed integers, relative to calibration
+        // position. Eg: center is (0,0), left is (-90,0) in standard resolution
+        // or (-126,0) in HD, etc
         let input = controller.read_blocking(&mut delay).unwrap();
         // You can read individual buttons...
         let a = input.button_a;
@@ -57,6 +63,8 @@ fn main() {
 
 - Nunchuk is supported
 - Classic controllers supported in regular and HD mode
+- Controller init is not 100% reliable, can suffer from i2c errors.
+  Error handling around new() is strongly recommended.
 
 ## Support
 
