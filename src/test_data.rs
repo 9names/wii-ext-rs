@@ -4,9 +4,8 @@ use crate::ExtHdReport;
 use crate::ExtReport;
 // Test data with each peripheral in certain states
 // ID is the identification data from address
-// Note that ID data does not quite match what is described at (wiibrew)[https://wiibrew.org/wiki/Wiimote/Extension_Controllers#The_New_Way]
-// In particular, the last two bytes for the wii classic controller are [03, 01]
-// No idea why
+// CLASSIC_HIRES_DEFAULT is the value of the hi-res mode register *before* setting it
+// since we'll need that to restore to regular mode
 
 // Nunchuck
 pub const NUNCHUCK_ID: ExtReport = [0, 0, 164, 32, 0, 0];
@@ -50,7 +49,8 @@ pub const SNES_BTN_START: ExtReport = [95, 223, 143, 0, 251, 255];
 pub const SNES_HD_IDLE: ExtHdReport = [128, 132, 132, 132, 0, 0, 255, 255];
 
 // Wii Classic controller
-pub const CLASSIC_ID: ExtReport = [0, 0, 164, 32, 3, 1];
+pub const CLASSIC_ID: ExtReport = [0, 0, 164, 32, 1, 1];
+pub const CLASSIC_HIRES_DEFAULT: u8 = 1;
 pub const CLASSIC_IDLE: ExtReport = [97, 224, 145, 99, 255, 255];
 pub const CLASSIC_BTN_B: ExtReport = [97, 224, 145, 99, 255, 191];
 pub const CLASSIC_BTN_A: ExtReport = [97, 224, 145, 99, 255, 239];
@@ -69,14 +69,25 @@ pub const CLASSIC_BTN_PLUS: ExtReport = [97, 224, 145, 99, 251, 255];
 pub const CLASSIC_BTN_HOME: ExtReport = [97, 224, 145, 99, 247, 255];
 pub const CLASSIC_LJOY_U: ExtReport = [97, 251, 145, 99, 255, 255];
 pub const CLASSIC_LJOY_D: ExtReport = [97, 200, 145, 99, 255, 255];
-pub const CLASSIC_LJOY_L: ExtReport = [73, 225, 145, 99, 255, 255];
+pub const CLASSIC_LJOY_L: ExtReport = [72, 226, 145, 99, 255, 255];
 pub const CLASSIC_LJOY_R: ExtReport = [121, 225, 145, 99, 255, 255];
 pub const CLASSIC_RJOY_U: ExtReport = [161, 32, 29, 99, 255, 255];
 pub const CLASSIC_RJOY_D: ExtReport = [161, 32, 3, 99, 255, 255];
-pub const CLASSIC_RJOY_L: ExtReport = [32, 96, 144, 99, 255, 255];
+pub const CLASSIC_RJOY_L: ExtReport = [33, 96, 144, 99, 255, 255];
 pub const CLASSIC_RJOY_R: ExtReport = [225, 160, 16, 99, 255, 255];
-pub const CLASSIC_LTRIG: ExtReport = [97, 224, 241, 3, 255, 255];
-pub const CLASSIC_RTRIG: ExtReport = [97, 224, 145, 120, 255, 255];
+pub const CLASSIC_LTRIG: ExtReport = [97, 224, 241, 195, 255, 255];
+pub const CLASSIC_RTRIG: ExtReport = [97, 224, 145, 126, 255, 255];
+pub const CLASSIC_LTRIG_W_BUTTON: ExtReport = [97, 224, 241, 195, 223, 255];
+pub const CLASSIC_RTRIG_W_BUTTON: ExtReport = [97, 224, 145, 126, 253, 255];
+pub const CLASSIC_LJOY_UR: ExtReport = [114, 243, 145, 99, 255, 255];
+pub const CLASSIC_LJOY_DR: ExtReport = [114, 206, 145, 99, 255, 255];
+pub const CLASSIC_LJOY_DL: ExtReport = [79, 205, 145, 99, 255, 255];
+pub const CLASSIC_LJOY_UL: ExtReport = [79, 245, 145, 99, 255, 255];
+pub const CLASSIC_RJOY_UR: ExtReport = [225, 32, 154, 99, 255, 255];
+pub const CLASSIC_RJOY_DR: ExtReport = [225, 32, 134, 99, 255, 255];
+pub const CLASSIC_RJOY_DL: ExtReport = [33, 224, 7, 99, 255, 255];
+pub const CLASSIC_RJOY_UL: ExtReport = [33, 224, 25, 99, 255, 255];
+
 // Wii Classic in High_Def mode (subset of all data, only really care about axis diffs)
 pub const CLASSIC_HD_IDLE: ExtHdReport = [132, 127, 130, 136, 31, 26, 255, 255];
 pub const CLASSIC_HD_LJOY_U: ExtHdReport = [134, 128, 238, 137, 31, 26, 255, 255];
