@@ -46,9 +46,9 @@ fn main() {
         let y = input.joystick_left_y;
         // the data structs optionally support defmt::debug
         // if you enable features=["defmt_print"]
-        info!("{:?}", read);
+        info!("{:?}", input);
         // Calibration can be manually performed as needed
-        controller.update_calibration();
+        controller.update_calibration(&mut delay).unwrap();
     }
 }
 ```
