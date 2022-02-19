@@ -166,7 +166,8 @@ pub const PRO_HD_RJOY_UL: ExtHdReport = [128, 50, 125, 220, 0, 0, 255, 255];
 
 // PDP "Link" gamecube clone controller
 pub const PDP_LINK_ID: ExtReport = [1, 0, 164, 32, 1, 1];
-pub const PDP_LINK_IDLE: ExtReport = [160, 30, 15, 0, 255, 255];
+pub const PDP_LINK_HIRES_DEFAULT: u8 = 1;
+pub const PDP_LINK_IDLE: ExtReport = [160, 29, 15, 0, 255, 255];
 pub const PDP_LINK_BTN_B: ExtReport = [160, 30, 15, 0, 255, 191];
 pub const PDP_LINK_BTN_A: ExtReport = [160, 30, 15, 0, 255, 239];
 pub const PDP_LINK_BTN_X: ExtReport = [160, 30, 15, 0, 255, 247];
@@ -182,15 +183,24 @@ pub const PDP_LINK_PAD_R: ExtReport = [160, 30, 15, 0, 127, 255];
 pub const PDP_LINK_BTN_MINUS: ExtReport = [160, 30, 15, 0, 239, 255];
 pub const PDP_LINK_BTN_PLUS: ExtReport = [160, 30, 15, 0, 251, 255];
 pub const PDP_LINK_BTN_HOME: ExtReport = [160, 30, 15, 0, 247, 255];
-pub const PDP_LINK_LJOY_U: ExtReport = [63, 30, 15, 0, 255, 255];
-pub const PDP_LINK_LJOY_D: ExtReport = [0, 30, 15, 0, 255, 255];
+pub const PDP_LINK_LJOY_U: ExtReport = [159, 63, 15, 0, 255, 255];
+pub const PDP_LINK_LJOY_D: ExtReport = [159, 0, 15, 0, 255, 255];
 pub const PDP_LINK_LJOY_L: ExtReport = [128, 30, 15, 0, 255, 255];
 pub const PDP_LINK_LJOY_R: ExtReport = [189, 30, 15, 0, 255, 255];
 pub const PDP_LINK_RJOY_U: ExtReport = [160, 30, 31, 0, 255, 255];
 pub const PDP_LINK_RJOY_D: ExtReport = [160, 30, 0, 0, 255, 255];
 pub const PDP_LINK_RJOY_L: ExtReport = [32, 30, 143, 0, 255, 255];
 pub const PDP_LINK_RJOY_R: ExtReport = [224, 222, 143, 0, 255, 255];
-pub const PDP_LINK_HD_IDLE: ExtHdReport = [127, 129, 122, 124, 0, 0, 255, 255];
-// No analog triggers on pro controller
+// No analog triggers on PDP controller
 // pub const PDP_LINK_LTRIG: ExtReport = [];
 // pub const PDP_LINK_RTRIG: ExtReport = [];
+pub const PDP_LINK_LJOY_UR: ExtReport = [180, 55, 15, 0, 255, 255];
+pub const PDP_LINK_LJOY_DR: ExtReport = [179, 6, 15, 0, 255, 255];
+pub const PDP_LINK_LJOY_DL: ExtReport = [131, 5, 15, 0, 255, 255];
+pub const PDP_LINK_LJOY_UL: ExtReport = [131, 54, 15, 0, 255, 255];
+pub const PDP_LINK_RJOY_UR: ExtReport = [223, 222, 27, 0, 255, 255];
+pub const PDP_LINK_RJOY_DR: ExtReport = [223, 222, 2, 0, 255, 255];
+pub const PDP_LINK_RJOY_DL: ExtReport = [31, 222, 2, 0, 255, 255];
+pub const PDP_LINK_RJOY_UL: ExtReport = [31, 222, 27, 0, 255, 255];
+
+pub const PDP_LINK_HD_IDLE: ExtHdReport = [127, 129, 122, 124, 0, 0, 255, 255];
