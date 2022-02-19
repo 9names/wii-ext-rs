@@ -137,11 +137,32 @@ pub const PRO_RJOY_UR: ExtReport = [224, 95, 27, 0, 255, 255];
 pub const PRO_RJOY_DR: ExtReport = [224, 95, 7, 0, 255, 255];
 pub const PRO_RJOY_DL: ExtReport = [32, 223, 7, 0, 255, 255];
 pub const PRO_RJOY_UL: ExtReport = [32, 223, 27, 0, 255, 255];
-pub const PRO_HD_IDLE: ExtHdReport = [127, 129, 123, 136, 0, 0, 255, 255];
 
 // No analog triggers on pro controller
 //pub const PRO_LTRIG: ExtReport = [];
 //pub const PRO_RTRIG: ExtReport = [];
+
+pub const PRO_HD_IDLE: ExtHdReport = [128, 129, 125, 139, 0, 0, 255, 255];
+pub const PRO_HD_LJOY_U: ExtHdReport = [129, 129, 228, 139, 0, 0, 255, 255];
+pub const PRO_HD_LJOY_D: ExtHdReport = [127, 129, 18, 139, 0, 0, 255, 255];
+pub const PRO_HD_LJOY_L: ExtHdReport = [22, 129, 121, 139, 0, 0, 255, 255];
+pub const PRO_HD_LJOY_R: ExtHdReport = [230, 129, 125, 139, 0, 0, 255, 255];
+pub const PRO_HD_RJOY_U: ExtHdReport = [128, 130, 126, 245, 0, 0, 255, 255];
+pub const PRO_HD_RJOY_D: ExtHdReport = [128, 130, 126, 33, 0, 0, 255, 255];
+pub const PRO_HD_RJOY_L: ExtHdReport = [128, 23, 126, 142, 0, 0, 255, 255];
+pub const PRO_HD_RJOY_R: ExtHdReport = [128, 235, 126, 139, 0, 0, 255, 255];
+pub const PRO_HD_LJOY_UR: ExtHdReport = [207, 130, 197, 138, 0, 0, 255, 255];
+pub const PRO_HD_LJOY_DR: ExtHdReport = [207, 130, 50, 138, 0, 0, 255, 255];
+pub const PRO_HD_LJOY_DL: ExtHdReport = [45, 130, 43, 138, 0, 0, 255, 255];
+pub const PRO_HD_LJOY_UL: ExtHdReport = [47, 130, 203, 138, 0, 0, 255, 255];
+pub const PRO_HD_RJOY_UR: ExtHdReport = [128, 210, 125, 215, 0, 0, 255, 255];
+pub const PRO_HD_RJOY_DR: ExtHdReport = [128, 210, 125, 62, 0, 0, 255, 255];
+pub const PRO_HD_RJOY_DL: ExtHdReport = [128, 48, 125, 58, 0, 0, 255, 255];
+pub const PRO_HD_RJOY_UL: ExtHdReport = [128, 50, 125, 220, 0, 0, 255, 255];
+
+// No analog triggers on pro controller
+//pub const PRO_HD_LTRIG: ExtReport = [];
+//pub const PRO_HD_RTRIG: ExtReport = [];
 
 // PDP "Link" gamecube clone controller
 pub const PDP_LINK_ID: ExtReport = [1, 0, 164, 32, 1, 1];
