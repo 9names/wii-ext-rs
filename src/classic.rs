@@ -388,6 +388,19 @@ where
         Ok(())
     }
 
+    /// Switch the driver from hi-resolution to standard reporting reporting
+    ///
+    /// This disables the controllers high-resolution report data mode
+    /// It is assumed that all controllers use 0x01 as the 'standard' mode.
+    /// This has only been confirmed for classic and pro-classic controller.
+    pub fn disable_hires<D: DelayUs<u16>>(&mut self, delay: &mut D) -> Result<(), Error<E>> {
+        self.set_register(0xFE, 0x01)?;
+        delay.delay_us(INTERMESSAGE_DELAY_MICROSEC);
+        self.hires = false;
+        self.update_calibration(delay)?;
+        Ok(())
+    }
+
     fn read_id(&mut self) -> Result<ExtReport, Error<E>> {
         self.set_read_register_address(0xfa)?;
         let i2c_id = self.read_report()?;
