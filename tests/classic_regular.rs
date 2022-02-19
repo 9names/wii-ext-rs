@@ -7,9 +7,9 @@ use wii_ext::*;
 
 /// There's a certain amount of slop around the center position.
 /// Allow up to this range without it being an error
-const ZERO_SLOP: i8 = 5;
+const ZERO_SLOP: i8 = 8;
 /// Triggers are sloppier, or I accidentally pressed them during testing
-const TRIGGER_SLOP: i8 = 25;
+const TRIGGER_SLOP: i8 = 8;
 /// The max value at full deflection is ~100, but allow a bit less than that
 const AXIS_MAX: i8 = 90;
 
