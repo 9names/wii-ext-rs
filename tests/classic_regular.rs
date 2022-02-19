@@ -14,10 +14,6 @@ const TRIGGER_SLOP: i8 = 8;
 /// The max value at full deflection is ~100, but allow a bit less than that
 const AXIS_MAX: i8 = 90;
 
-/// The max value for the right stick is greatly reduced?
-/// Need to retest in hi-resolution
-const R_AXIS_MAX: i8 = 45;
-
 /// Compare two readings, asserting that all the digital inputs are identical
 fn assert_digital_eq(first: ClassicReading, second: ClassicReading) {
     assert_eq!(first.button_a, second.button_a);
@@ -366,7 +362,7 @@ assert_joysticks!(
     -ZERO_SLOP, ZERO_SLOP, // acceptable range for left x axis
     -ZERO_SLOP, ZERO_SLOP, // acceptable range for left y axis
     -ZERO_SLOP, ZERO_SLOP, // acceptable range for right x axis
-    i8::MIN, -R_AXIS_MAX, // acceptable range for right y axis
+    i8::MIN, -AXIS_MAX, // acceptable range for right y axis
     -TRIGGER_SLOP, TRIGGER_SLOP, // acceptable range for left trigger
     -TRIGGER_SLOP, TRIGGER_SLOP // // acceptable range for right trigger
 );
@@ -378,7 +374,7 @@ assert_joysticks!(
     -ZERO_SLOP, ZERO_SLOP, // acceptable range for left x axis
     -ZERO_SLOP, ZERO_SLOP, // acceptable range for left y axis
     -ZERO_SLOP, ZERO_SLOP, // acceptable range for right x axis
-    R_AXIS_MAX, i8::MAX, // acceptable range for right y axis
+    AXIS_MAX, i8::MAX, // acceptable range for right y axis
     -TRIGGER_SLOP, TRIGGER_SLOP, // acceptable range for left trigger
     -TRIGGER_SLOP, TRIGGER_SLOP // // acceptable range for right trigger
 );
