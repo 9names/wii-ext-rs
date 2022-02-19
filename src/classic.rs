@@ -152,7 +152,7 @@ fn decode_classic_report(data: &[u8]) -> ClassicReading {
             ((data[1] & 0b1100_0000) >> 5) |
             ((data[0] & 0b1100_0000) >> 3)
         ),
-        joystick_right_y:  ClassicReading::scale_6bit_8bit(data[2] & 0b0001_1111),
+        joystick_right_y:  ClassicReading::scale_5bit_8bit(data[2] & 0b0001_1111),
         trigger_left:     ClassicReading::scale_5bit_8bit(
             ((data[2] & 0b0110_0000) >> 2) |
             ((data[3] & 0b1110_0000) >> 5)
