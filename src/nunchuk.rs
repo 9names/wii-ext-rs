@@ -7,6 +7,8 @@
 // TODO: nunchuk technically supports HD report, but the last two bytes will be zeroes
 // work out if it's worth supporting that
 
+use crate::ControllerIdReport;
+use crate::ControllerType;
 use crate::ExtReport;
 use crate::EXT_I2C_ADDR;
 use crate::INTERMESSAGE_DELAY_MICROSEC;
@@ -181,6 +183,17 @@ where
         self.update_calibration(delay)?;
         delay.delay_us(INTERMESSAGE_DELAY_MICROSEC * 2);
         Ok(())
+    }
+
+    fn read_id(&mut self) -> Result<ControllerIdReport, Error<E>> {
+        self.set_read_register_address(0xfa)?;
+        let i2c_id = self.read_report()?;
+        Ok(i2c_id)
+    }
+
+    pub fn identify_controller(&mut self) -> Result<Option<ControllerType>, Error<E>> {
+        let i2c_id = self.read_id()?;
+        Ok(crate::common::identify_controller(i2c_id))
     }
 
     /// tell the extension controller to prepare a sample by setting the read cursor to 0
