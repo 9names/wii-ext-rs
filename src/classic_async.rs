@@ -18,8 +18,6 @@ use crate::ExtReport;
 use crate::EXT_I2C_ADDR;
 use crate::INTERMESSAGE_DELAY_MICROSEC_U32;
 use embedded_hal_async as hal;
-use embedded_hal_async::i2c::*;
-// use embedded_hal_async::delay::DelayUs;
 use embassy_time::{Duration, Timer};
 
 // use core::future::Future;
@@ -130,7 +128,7 @@ where
     /// This enables the controllers high-resolution report data mode, which returns each
     /// analogue axis as a u8, rather than packing smaller integers in a structure.
     /// If your controllers supports this mode, you should use it. It is much better.
-    async fn enable_hires(&mut self) -> Result<(), Self::Error> {
+    pub async fn enable_hires(&mut self) -> Result<(), Self::Error> {
         self.delay_us(INTERMESSAGE_DELAY_MICROSEC_U32 * 2).await;
         self.set_register(0xFE, 0x03).await?;
         self.delay_us(INTERMESSAGE_DELAY_MICROSEC_U32 * 2).await;
@@ -160,6 +158,17 @@ where
             .await
             .map_err(|_| Self::Error::I2C)
             .and(Ok(()))
+    }
+
+    async fn read_id(&mut self) -> Result<ControllerIdReport, Self::Error> {
+        self.set_read_register_address(0xfa).await?;
+        let i2c_id = self.read_report().await?;
+        Ok(i2c_id)
+    }
+
+    pub async fn identify_controller(&mut self) -> Result<Option<ControllerType>, Self::Error> {
+        let i2c_id = self.read_id().await?;
+        Ok(crate::common::identify_controller(i2c_id))
     }
 
     /// tell the extension controller to prepare a sample by setting the read cursor to 0
