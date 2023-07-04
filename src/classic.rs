@@ -23,12 +23,14 @@ use embedded_hal::blocking::i2c as i2ctrait;
 #[cfg(feature = "defmt_print")]
 use defmt;
 
+#[cfg_attr(feature = "defmt_print", derive(defmt::Format))]
 #[derive(Debug)]
 pub enum ClassicError<E> {
     Error(E),
     ParseError,
 }
 
+#[cfg_attr(feature = "defmt_print", derive(defmt::Format))]
 /// Errors in this crate
 #[derive(Debug)]
 pub enum Error<E> {
