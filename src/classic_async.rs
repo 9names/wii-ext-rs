@@ -17,8 +17,8 @@ use crate::ExtHdReport;
 use crate::ExtReport;
 use crate::EXT_I2C_ADDR;
 use crate::INTERMESSAGE_DELAY_MICROSEC_U32;
-use embedded_hal_async as hal;
 use embassy_time::{Duration, Timer};
+use embedded_hal_async as hal;
 
 // use core::future::Future;
 
@@ -111,15 +111,10 @@ where
 
         // Reset to base register first - this should recover a controller in a weird state.
         // Use longer delays here than normal reads - the system seems more unreliable performing these commands
-        self.delay_us(INTERMESSAGE_DELAY_MICROSEC_U32 * 2).await;
-        self.set_read_register_address(0).await?;
-        self.delay_us(INTERMESSAGE_DELAY_MICROSEC_U32 * 2).await;
-        self.set_register(0xF0, 0x55).await?;
-        self.delay_us(INTERMESSAGE_DELAY_MICROSEC_U32 * 2).await;
-        self.set_register(0xFB, 0x00).await?;
-        self.delay_us(INTERMESSAGE_DELAY_MICROSEC_U32 * 2).await;
+        self.set_read_register_address_with_delay(0).await?;
+        self.set_register_with_delay(0xF0, 0x55).await?;
+        self.set_register_with_delay(0xFB, 0x00).await?;
         self.update_calibration().await?;
-        self.delay_us(INTERMESSAGE_DELAY_MICROSEC_U32 * 2).await;
         Ok(())
     }
 
@@ -129,11 +124,8 @@ where
     /// analogue axis as a u8, rather than packing smaller integers in a structure.
     /// If your controllers supports this mode, you should use it. It is much better.
     pub async fn enable_hires(&mut self) -> Result<(), Self::Error> {
-        self.delay_us(INTERMESSAGE_DELAY_MICROSEC_U32 * 2).await;
-        self.set_register(0xFE, 0x03).await?;
-        self.delay_us(INTERMESSAGE_DELAY_MICROSEC_U32 * 2).await;
+        self.set_register_with_delay(0xFE, 0x03).await?;
         self.hires = true;
-        self.delay_us(INTERMESSAGE_DELAY_MICROSEC_U32 * 2).await;
         Ok(())
     }
 
@@ -151,6 +143,12 @@ where
             .and(Ok(()))
     }
 
+    async fn set_read_register_address_with_delay(&mut self, byte0: u8) -> Result<(), Self::Error> {
+        self.delay_us(INTERMESSAGE_DELAY_MICROSEC_U32 * 2).await;
+        let res = self.set_read_register_address(byte0);
+        res.await
+    }
+
     /// Set a single register at target address
     async fn set_register(&mut self, addr: u8, byte1: u8) -> Result<(), Self::Error> {
         self.i2cdev
@@ -158,6 +156,12 @@ where
             .await
             .map_err(|_| Self::Error::I2C)
             .and(Ok(()))
+    }
+
+    async fn set_register_with_delay(&mut self, addr: u8, byte1: u8) -> Result<(), Self::Error> {
+        self.delay_us(INTERMESSAGE_DELAY_MICROSEC_U32 * 2).await;
+        let res = self.set_register(addr, byte1);
+        res.await
     }
 
     async fn read_id(&mut self) -> Result<ControllerIdReport, Self::Error> {
