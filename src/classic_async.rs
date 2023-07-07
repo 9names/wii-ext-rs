@@ -125,6 +125,7 @@ where
     pub async fn enable_hires(&mut self) -> Result<(), Self::Error> {
         self.set_register_with_delay(0xFE, 0x03).await?;
         self.hires = true;
+        self.update_calibration().await?;
         Ok(())
     }
 
