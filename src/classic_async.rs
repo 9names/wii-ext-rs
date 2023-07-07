@@ -88,8 +88,7 @@ where
     // / Since each device will have different tolerances, we take a snapshot of some analog data
     // / to use as the "baseline" center.
     pub async fn update_calibration(&mut self) -> Result<(), Self::Error> {
-        let data = self.read_report().await?;
-        let data = ClassicReading::from_data(&data).ok_or(Self::Error::InvalidInputData)?;
+        let data = self.read_classic_report().await?;
         self.calibration = CalibrationData {
             joystick_left_x: data.joystick_left_x,
             joystick_left_y: data.joystick_left_y,
