@@ -196,16 +196,16 @@ where
     }
 
     /// Simple blocking read helper that will start a sample, wait 10ms, then read the value
-    pub async fn read_report_blocking(&mut self) -> Result<ClassicReading, Self::Error> {
+    pub async fn read_report(&mut self) -> Result<ClassicReading, Self::Error> {
         self.start_sample().await?;
         self.delay_us(INTERMESSAGE_DELAY_MICROSEC_U32).await;
         self.read_classic_report().await
     }
 
     /// Do a read, and report axis values relative to calibration
-    pub async fn read_blocking(&mut self) -> Result<ClassicReadingCalibrated, Self::Error> {
+    pub async fn read(&mut self) -> Result<ClassicReadingCalibrated, Self::Error> {
         Ok(ClassicReadingCalibrated::new(
-            self.read_report_blocking().await?,
+            self.read_report().await?,
             &self.calibration,
         ))
     }
