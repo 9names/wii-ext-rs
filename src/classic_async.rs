@@ -110,9 +110,11 @@ where
 
         // Reset to base register first - this should recover a controller in a weird state.
         // Use longer delays here than normal reads - the system seems more unreliable performing these commands
+        self.delay_us(100_000).await;
         self.set_read_register_address_with_delay(0).await?;
         self.set_register_with_delay(0xF0, 0x55).await?;
         self.set_register_with_delay(0xFB, 0x00).await?;
+        self.delay_us(100_000).await;
         self.update_calibration().await?;
         Ok(())
     }
@@ -125,6 +127,7 @@ where
     pub async fn enable_hires(&mut self) -> Result<(), Self::Error> {
         self.set_register_with_delay(0xFE, 0x03).await?;
         self.hires = true;
+        self.delay_us(100_000).await;
         self.update_calibration().await?;
         Ok(())
     }
@@ -144,7 +147,7 @@ where
     }
 
     async fn set_read_register_address_with_delay(&mut self, byte0: u8) -> Result<(), Self::Error> {
-        self.delay_us(INTERMESSAGE_DELAY_MICROSEC_U32 * 2).await;
+        self.delay_us(INTERMESSAGE_DELAY_MICROSEC_U32).await;
         let res = self.set_read_register_address(byte0);
         res.await
     }
@@ -159,7 +162,7 @@ where
     }
 
     async fn set_register_with_delay(&mut self, addr: u8, byte1: u8) -> Result<(), Self::Error> {
-        self.delay_us(INTERMESSAGE_DELAY_MICROSEC_U32 * 2).await;
+        self.delay_us(INTERMESSAGE_DELAY_MICROSEC_U32).await;
         let res = self.set_register(addr, byte1);
         res.await
     }
