@@ -196,7 +196,7 @@ where
     }
 
     /// Simple blocking read helper that will start a sample, wait 10ms, then read the value
-    pub async fn read_report(&mut self) -> Result<ClassicReading, Self::Error> {
+    async fn read_report(&mut self) -> Result<ClassicReading, Self::Error> {
         self.start_sample().await?;
         self.delay_us(INTERMESSAGE_DELAY_MICROSEC_U32).await;
         self.read_classic_report().await
