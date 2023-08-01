@@ -3,13 +3,14 @@
     feature = "async",
     feature(type_alias_impl_trait, inherent_associated_types)
 )]
-/// Blocking I2C impl
-pub mod classic;
 #[cfg(feature = "async")]
 pub mod classic_async;
+/// Blocking I2C impl
+pub mod classic_sync;
 
 /// Types + data decoding
-pub mod classic_core;
+pub mod core;
+
 /// Anything common between nunchuk + classic
 pub mod common;
 

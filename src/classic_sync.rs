@@ -10,7 +10,7 @@
 //
 // See `decode_classic_report` and `decode_classic_hd_report` for data format
 
-use crate::classic_core::*;
+use crate::core::classic::*;
 use crate::ControllerIdReport;
 use crate::ControllerType;
 use crate::ExtHdReport;

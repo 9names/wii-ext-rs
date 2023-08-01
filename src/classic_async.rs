@@ -10,7 +10,7 @@
 //
 // See `decode_classic_report` and `decode_classic_hd_report` for data format
 
-use crate::classic_core::*;
+use crate::core::classic::*;
 use crate::ControllerIdReport;
 use crate::ControllerType;
 use crate::ExtHdReport;
@@ -64,7 +64,7 @@ where
     }
 
     /// Read the button/axis data from the classic controller
-    async fn read_report(&mut self) -> Result<ExtReport, Self::Error> {
+    async fn read_ext_report(&mut self) -> Result<ExtReport, Self::Error> {
         let mut buffer: ExtReport = ExtReport::default();
         self.i2cdev
             .read(EXT_I2C_ADDR as u8, &mut buffer)
@@ -88,7 +88,7 @@ where
     // / Since each device will have different tolerances, we take a snapshot of some analog data
     // / to use as the "baseline" center.
     pub async fn update_calibration(&mut self) -> Result<(), Self::Error> {
-        let data = self.read_report_blocking().await?;
+        let data = self.read_report().await?;
         self.calibration = CalibrationData {
             joystick_left_x: data.joystick_left_x,
             joystick_left_y: data.joystick_left_y,
@@ -169,7 +169,7 @@ where
 
     async fn read_id(&mut self) -> Result<ControllerIdReport, Self::Error> {
         self.set_read_register_address(0xfa).await?;
-        let i2c_id = self.read_report().await?;
+        let i2c_id = self.read_ext_report().await?;
         Ok(i2c_id)
     }
 
@@ -190,7 +190,7 @@ where
             let buf = self.read_hd_report().await?;
             ClassicReading::from_data(&buf).ok_or(Self::Error::InvalidInputData)
         } else {
-            let buf = self.read_report().await?;
+            let buf = self.read_ext_report().await?;
             ClassicReading::from_data(&buf).ok_or(Self::Error::InvalidInputData)
         }
     }
