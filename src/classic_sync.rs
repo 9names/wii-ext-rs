@@ -49,7 +49,7 @@ pub struct Classic<I2C> {
 // use crate::nunchuk;
 impl<T, E> Classic<T>
 where
-    T: i2ctrait::Write<Error = E> + i2ctrait::Read<Error = E> + i2ctrait::WriteRead<Error = E>,
+    T: i2ctrait::Write<Error = E> + i2ctrait::Read<Error = E> + i2ctrait::Write<Error = E>,
 {
     /// Create a new Wii Nunchuck
     ///
