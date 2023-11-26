@@ -11,11 +11,12 @@ use crate::ControllerIdReport;
 use crate::ControllerType;
 use crate::ExtReport;
 use crate::EXT_I2C_ADDR;
-use crate::INTERMESSAGE_DELAY_MICROSEC;
-use embedded_hal::blocking::delay::DelayUs;
+use crate::INTERMESSAGE_DELAY_MICROSEC_U32 as INTERMESSAGE_DELAY_MICROSEC;
+use embedded_hal::delay::DelayUs;
 
 #[cfg(feature = "defmt_print")]
 use defmt;
+use embedded_hal::i2c::{I2c, SevenBitAddress};
 
 #[derive(Debug)]
 pub enum NunchukError<E> {
@@ -116,17 +117,16 @@ pub struct Nunchuk<I2C> {
     calibration: CalibrationData,
 }
 
-use embedded_hal::blocking::i2c as i2ctrait;
 impl<T, E> Nunchuk<T>
 where
-    T: i2ctrait::Write<Error = E> + i2ctrait::Read<Error = E> + i2ctrait::WriteRead<Error = E>,
+    T: I2c<SevenBitAddress, Error = E>,
 {
     /// Create a new Wii Nunchuk
     ///
     /// This method will open the provide i2c device file and will
     /// send the required init sequence in order to read data in
     /// the future.
-    pub fn new<D: DelayUs<u16>>(i2cdev: T, delay: &mut D) -> Result<Nunchuk<T>, Error<E>> {
+    pub fn new<D: DelayUs>(i2cdev: T, delay: &mut D) -> Result<Nunchuk<T>, Error<E>> {
         let mut nunchuk = Nunchuk {
             i2cdev,
             calibration: CalibrationData::default(),
@@ -139,7 +139,7 @@ where
     ///
     /// Since each device will have different tolerances, we take a snapshot of some analog data
     /// to use as the "baseline" center.
-    pub fn update_calibration<D: DelayUs<u16>>(&mut self, delay: &mut D) -> Result<(), Error<E>> {
+    pub fn update_calibration<D: DelayUs>(&mut self, delay: &mut D) -> Result<(), Error<E>> {
         let data = self.read_report_blocking(delay)?;
 
         self.calibration = CalibrationData {
@@ -170,7 +170,7 @@ where
     }
 
     /// Send the init sequence to the Wii extension controller
-    pub fn init<D: DelayUs<u16>>(&mut self, delay: &mut D) -> Result<(), Error<E>> {
+    pub fn init<D: DelayUs>(&mut self, delay: &mut D) -> Result<(), Error<E>> {
         // These registers must be written to disable encryption.; the documentation is a bit
         // lacking but it appears this is some kind of handshake to
         // perform unencrypted data tranfers
@@ -224,7 +224,7 @@ where
     }
 
     /// Simple blocking read helper that will start a sample, wait `INTERMESSAGE_DELAY_MICROSEC`, then read the value
-    pub fn read_report_blocking<D: DelayUs<u16>>(
+    pub fn read_report_blocking<D: DelayUs>(
         &mut self,
         delay: &mut D,
     ) -> Result<NunchukReading, Error<E>> {
@@ -235,7 +235,7 @@ where
     }
 
     /// Do a read, and report axis values relative to calibration
-    pub fn read_blocking<D: DelayUs<u16>>(
+    pub fn read_blocking<D: DelayUs>(
         &mut self,
         delay: &mut D,
     ) -> Result<NunchukReadingCalibrated, Error<E>> {
