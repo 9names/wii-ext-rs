@@ -1,12 +1,10 @@
 #![cfg_attr(not(test), no_std)]
-#![cfg_attr(
-    feature = "async",
-    feature(type_alias_impl_trait, inherent_associated_types)
-)]
-#[cfg(feature = "async")]
-pub mod classic_async;
+
 /// Blocking I2C impl
 pub mod classic_sync;
+
+// Async I2C impl
+pub mod classic_async;
 
 /// Types + data decoding
 pub mod core;

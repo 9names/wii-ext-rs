@@ -17,8 +17,7 @@ use crate::ExtHdReport;
 use crate::ExtReport;
 use crate::EXT_I2C_ADDR;
 use crate::INTERMESSAGE_DELAY_MICROSEC_U32;
-use embassy_time::{Duration, Timer};
-use embedded_hal_async as hal;
+use embedded_hal_async;
 
 // use core::future::Future;
 
@@ -34,52 +33,54 @@ pub enum ClassicAsyncError {
     ParseError,
 }
 
-pub struct ClassicAsync<I2C> {
+pub struct ClassicAsync<I2C, Delay> {
     i2cdev: I2C,
     hires: bool,
     calibration: CalibrationData,
+    delay: Delay
 }
 
 // use crate::nunchuk;
-impl<I2C> ClassicAsync<I2C>
+impl<I2C, Delay> ClassicAsync<I2C, Delay>
 where
-    I2C: hal::i2c::I2c,
+    I2C: embedded_hal_async::i2c::I2c,
+    Delay: embedded_hal_async::delay::DelayNs
 {
-    pub type Error = ClassicAsyncError;
     /// Create a new Wii Nunchuck
     ///
     /// This method will open the provide i2c device file and will
     /// send the required init sequence in order to read data in
     /// the future.
-    pub fn new(i2cdev: I2C) -> Self {
+    pub fn new(i2cdev: I2C, delay: Delay) -> Self {
         Self {
             i2cdev,
             hires: false,
             calibration: CalibrationData::default(),
+            delay
         }
     }
 
     async fn delay_us(&mut self, micros: u32) {
-        Timer::after(Duration::from_micros(micros as _)).await
+        self.delay.delay_us(micros).await
     }
 
     /// Read the button/axis data from the classic controller
-    async fn read_ext_report(&mut self) -> Result<ExtReport, Self::Error> {
+    async fn read_ext_report(&mut self) -> Result<ExtReport, ClassicAsyncError> {
         let mut buffer: ExtReport = ExtReport::default();
         self.i2cdev
             .read(EXT_I2C_ADDR as u8, &mut buffer)
             .await
-            .map_err(|_| Self::Error::I2C)
+            .map_err(|_| ClassicAsyncError::I2C)
             .and(Ok(buffer))
     }
 
     /// Read a high-resolution version of the button/axis data from the classic controller
-    async fn read_hd_report(&mut self) -> Result<ExtHdReport, Self::Error> {
+    async fn read_hd_report(&mut self) -> Result<ExtHdReport, ClassicAsyncError> {
         let mut buffer: ExtHdReport = ExtHdReport::default();
         self.i2cdev
             .read(EXT_I2C_ADDR as u8, &mut buffer)
             .await
-            .map_err(|_| Self::Error::I2C)
+            .map_err(|_| ClassicAsyncError::I2C)
             .and(Ok(buffer))
     }
 
@@ -87,7 +88,7 @@ where
     // /
     // / Since each device will have different tolerances, we take a snapshot of some analog data
     // / to use as the "baseline" center.
-    pub async fn update_calibration(&mut self) -> Result<(), Self::Error> {
+    pub async fn update_calibration(&mut self) -> Result<(), ClassicAsyncError> {
         let data = self.read_report().await?;
         self.calibration = CalibrationData {
             joystick_left_x: data.joystick_left_x,
@@ -103,7 +104,7 @@ where
     /// Send the init sequence to the Wii extension controller
     ///
     /// This could be a bit faster with DelayUs, but since you only init once we'll re-use delay_ms
-    pub async fn init(&mut self) -> Result<(), Self::Error> {
+    pub async fn init(&mut self) -> Result<(), ClassicAsyncError> {
         // Extension controllers by default will use encrypted communication, as that is what the Wii does.
         // We can disable this encryption by writing some magic values
         // This is described at https://wiibrew.org/wiki/Wiimote/Extension_Controllers#The_New_Way
@@ -124,7 +125,7 @@ where
     /// This enables the controllers high-resolution report data mode, which returns each
     /// analogue axis as a u8, rather than packing smaller integers in a structure.
     /// If your controllers supports this mode, you should use it. It is much better.
-    pub async fn enable_hires(&mut self) -> Result<(), Self::Error> {
+    pub async fn enable_hires(&mut self) -> Result<(), ClassicAsyncError> {
         self.set_register_with_delay(0xFE, 0x03).await?;
         self.hires = true;
         self.delay_us(100_000).await;
@@ -138,72 +139,72 @@ where
     /// increments the register read postion on each read operation, and also on
     /// every write operation.
     /// This should be called before a read operation to ensure you get the correct data
-    async fn set_read_register_address(&mut self, byte0: u8) -> Result<(), Self::Error> {
+    async fn set_read_register_address(&mut self, byte0: u8) -> Result<(), ClassicAsyncError> {
         self.i2cdev
             .write(EXT_I2C_ADDR as u8, &[byte0])
             .await
-            .map_err(|_| Self::Error::I2C)
+            .map_err(|_| ClassicAsyncError::I2C)
             .and(Ok(()))
     }
 
-    async fn set_read_register_address_with_delay(&mut self, byte0: u8) -> Result<(), Self::Error> {
+    async fn set_read_register_address_with_delay(&mut self, byte0: u8) -> Result<(), ClassicAsyncError> {
         self.delay_us(INTERMESSAGE_DELAY_MICROSEC_U32).await;
         let res = self.set_read_register_address(byte0);
         res.await
     }
 
     /// Set a single register at target address
-    async fn set_register(&mut self, addr: u8, byte1: u8) -> Result<(), Self::Error> {
+    async fn set_register(&mut self, addr: u8, byte1: u8) -> Result<(), ClassicAsyncError> {
         self.i2cdev
             .write(EXT_I2C_ADDR as u8, &[addr, byte1])
             .await
-            .map_err(|_| Self::Error::I2C)
+            .map_err(|_| ClassicAsyncError::I2C)
             .and(Ok(()))
     }
 
-    async fn set_register_with_delay(&mut self, addr: u8, byte1: u8) -> Result<(), Self::Error> {
+    async fn set_register_with_delay(&mut self, addr: u8, byte1: u8) -> Result<(), ClassicAsyncError> {
         self.delay_us(INTERMESSAGE_DELAY_MICROSEC_U32).await;
         let res = self.set_register(addr, byte1);
         res.await
     }
 
-    async fn read_id(&mut self) -> Result<ControllerIdReport, Self::Error> {
+    async fn read_id(&mut self) -> Result<ControllerIdReport, ClassicAsyncError> {
         self.set_read_register_address(0xfa).await?;
         let i2c_id = self.read_ext_report().await?;
         Ok(i2c_id)
     }
 
-    pub async fn identify_controller(&mut self) -> Result<Option<ControllerType>, Self::Error> {
+    pub async fn identify_controller(&mut self) -> Result<Option<ControllerType>, ClassicAsyncError> {
         let i2c_id = self.read_id().await?;
         Ok(crate::common::identify_controller(i2c_id))
     }
 
     /// tell the extension controller to prepare a sample by setting the read cursor to 0
-    async fn start_sample(&mut self) -> Result<(), Self::Error> {
+    async fn start_sample(&mut self) -> Result<(), ClassicAsyncError> {
         self.set_read_register_address(0x00).await?;
         Ok(())
     }
 
     /// poll the controller for the latest data
-    async fn read_classic_report(&mut self) -> Result<ClassicReading, Self::Error> {
+    async fn read_classic_report(&mut self) -> Result<ClassicReading, ClassicAsyncError> {
         if self.hires {
             let buf = self.read_hd_report().await?;
-            ClassicReading::from_data(&buf).ok_or(Self::Error::InvalidInputData)
+            ClassicReading::from_data(&buf).ok_or(ClassicAsyncError::InvalidInputData)
         } else {
             let buf = self.read_ext_report().await?;
-            ClassicReading::from_data(&buf).ok_or(Self::Error::InvalidInputData)
+            ClassicReading::from_data(&buf).ok_or(ClassicAsyncError::InvalidInputData)
         }
     }
 
     /// Simple blocking read helper that will start a sample, wait 10ms, then read the value
-    async fn read_report(&mut self) -> Result<ClassicReading, Self::Error> {
+    async fn read_report(&mut self) -> Result<ClassicReading, ClassicAsyncError> {
         self.start_sample().await?;
         self.delay_us(INTERMESSAGE_DELAY_MICROSEC_U32).await;
         self.read_classic_report().await
     }
 
     /// Do a read, and report axis values relative to calibration
-    pub async fn read(&mut self) -> Result<ClassicReadingCalibrated, Self::Error> {
+    pub async fn read(&mut self) -> Result<ClassicReadingCalibrated, ClassicAsyncError> {
         Ok(ClassicReadingCalibrated::new(
             self.read_report().await?,
             &self.calibration,
