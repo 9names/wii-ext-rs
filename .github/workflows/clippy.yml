@@ -4,6 +4,9 @@ jobs:
   clippy_check:
     name: Run Clippy
     runs-on: ubuntu-20.04
+    defaults:
+      run:
+        working-directory: wii-ext
     env:
       RUSTFLAGS: "-D warnings"
     steps:

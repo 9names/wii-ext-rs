@@ -4,6 +4,9 @@ jobs:
   fmt:
     name: Rustfmt
     runs-on: ubuntu-20.04
+    defaults:
+      run:
+        working-directory: wii-ext
     env:
       RUSTFLAGS: "-D warnings"
     steps:
