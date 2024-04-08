@@ -1,7 +1,7 @@
 use embedded_hal_mock::delay::MockNoop;
 use embedded_hal_mock::i2c::{self, Transaction};
 use paste::paste;
-use wii_ext::classic::*;
+use wii_ext::classic_sync::*;
 use wii_ext::*;
 
 /// There's a certain amount of slop around the center position.
