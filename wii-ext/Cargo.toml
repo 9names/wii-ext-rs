@@ -9,10 +9,8 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 embedded-hal = "1"
-defmt = { version = "0.3.0", optional = true }
 embedded-hal-async = { version = "1"}
-# embassy-futures = { version ="0.1.0", optional = true }
-embassy-time = { version ="0.3"}
+defmt = { version = "0.3.0", optional = true }
 
 [dev-dependencies]
 embedded-hal-mock = "0.8.0"
@@ -21,4 +19,3 @@ paste = "1.0.6"
 [features]
 default = ["defmt_print"]
 defmt_print = ["defmt"]
-# async = ["embedded-hal-async", "embassy-futures", "embassy-time"]
