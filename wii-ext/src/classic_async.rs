@@ -37,14 +37,14 @@ pub struct ClassicAsync<I2C, Delay> {
     i2cdev: I2C,
     hires: bool,
     calibration: CalibrationData,
-    delay: Delay
+    delay: Delay,
 }
 
 // use crate::nunchuk;
 impl<I2C, Delay> ClassicAsync<I2C, Delay>
 where
     I2C: embedded_hal_async::i2c::I2c,
-    Delay: embedded_hal_async::delay::DelayNs
+    Delay: embedded_hal_async::delay::DelayNs,
 {
     /// Create a new Wii Nunchuck
     ///
@@ -56,7 +56,7 @@ where
             i2cdev,
             hires: false,
             calibration: CalibrationData::default(),
-            delay
+            delay,
         }
     }
 
@@ -147,7 +147,10 @@ where
             .and(Ok(()))
     }
 
-    async fn set_read_register_address_with_delay(&mut self, byte0: u8) -> Result<(), ClassicAsyncError> {
+    async fn set_read_register_address_with_delay(
+        &mut self,
+        byte0: u8,
+    ) -> Result<(), ClassicAsyncError> {
         self.delay_us(INTERMESSAGE_DELAY_MICROSEC_U32).await;
         let res = self.set_read_register_address(byte0);
         res.await
@@ -162,7 +165,11 @@ where
             .and(Ok(()))
     }
 
-    async fn set_register_with_delay(&mut self, addr: u8, byte1: u8) -> Result<(), ClassicAsyncError> {
+    async fn set_register_with_delay(
+        &mut self,
+        addr: u8,
+        byte1: u8,
+    ) -> Result<(), ClassicAsyncError> {
         self.delay_us(INTERMESSAGE_DELAY_MICROSEC_U32).await;
         let res = self.set_register(addr, byte1);
         res.await
@@ -174,7 +181,9 @@ where
         Ok(i2c_id)
     }
 
-    pub async fn identify_controller(&mut self) -> Result<Option<ControllerType>, ClassicAsyncError> {
+    pub async fn identify_controller(
+        &mut self,
+    ) -> Result<Option<ControllerType>, ClassicAsyncError> {
         let i2c_id = self.read_id().await?;
         Ok(crate::common::identify_controller(i2c_id))
     }
