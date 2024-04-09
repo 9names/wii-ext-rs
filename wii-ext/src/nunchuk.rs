@@ -250,7 +250,7 @@ where
 mod tests {
     use super::*;
     use crate::test_data;
-    use embedded_hal_mock::i2c::{self, Transaction};
+    use embedded_hal_mock::eh1::i2c::{self, Transaction};
     /// There's a certain amount of slop around the center position.
     /// Allow up to this range without it being an error
     const ZERO_SLOP: i8 = 5;
@@ -265,14 +265,15 @@ mod tests {
             Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
             Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_IDLE.to_vec()),
         ];
-        let mock = i2c::Mock::new(&expectations);
+        let mut mock = i2c::Mock::new(&expectations);
         let mut nc = Nunchuk {
-            i2cdev: mock,
+            i2cdev: mock.clone(),
             calibration: CalibrationData::default(),
         };
         let report = nc.read_no_wait().unwrap();
         assert!(!report.button_c);
         assert!(!report.button_z);
+        mock.done();
     }
 
     #[test]
@@ -281,10 +282,10 @@ mod tests {
             Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
             Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_IDLE.to_vec()),
         ];
-        let mock = i2c::Mock::new(&expectations);
+        let mut mock = i2c::Mock::new(&expectations);
         let idle = NunchukReading::from_data(&test_data::NUNCHUCK_IDLE).unwrap();
         let mut nc = Nunchuk {
-            i2cdev: mock,
+            i2cdev: mock.clone(),
             calibration: CalibrationData {
                 joystick_x: idle.joystick_x,
                 joystick_y: idle.joystick_y,
@@ -295,6 +296,7 @@ mod tests {
         assert!(!report.button_z);
         assert_eq!(report.joystick_x, 0);
         assert_eq!(report.joystick_y, 0);
+        mock.done();
     }
 
     #[test]
@@ -303,10 +305,10 @@ mod tests {
             Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
             Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_JOY_L.to_vec()),
         ];
-        let mock = i2c::Mock::new(&expectations);
+        let mut mock = i2c::Mock::new(&expectations);
         let idle = NunchukReading::from_data(&test_data::NUNCHUCK_IDLE).unwrap();
         let mut nc = Nunchuk {
-            i2cdev: mock,
+            i2cdev: mock.clone(),
             calibration: CalibrationData {
                 joystick_x: idle.joystick_x,
                 joystick_y: idle.joystick_y,
@@ -318,6 +320,7 @@ mod tests {
         assert!(report.joystick_x < -AXIS_MAX, "x = {}", report.joystick_x);
         assert!(report.joystick_y > -ZERO_SLOP, "y = {}", report.joystick_y);
         assert!(report.joystick_y < ZERO_SLOP, "y = {}", report.joystick_y);
+        mock.done();
     }
 
     #[test]
@@ -326,10 +329,10 @@ mod tests {
             Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
             Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_JOY_R.to_vec()),
         ];
-        let mock = i2c::Mock::new(&expectations);
+        let mut mock = i2c::Mock::new(&expectations);
         let idle = NunchukReading::from_data(&test_data::NUNCHUCK_IDLE).unwrap();
         let mut nc = Nunchuk {
-            i2cdev: mock,
+            i2cdev: mock.clone(),
             calibration: CalibrationData {
                 joystick_x: idle.joystick_x,
                 joystick_y: idle.joystick_y,
@@ -341,6 +344,7 @@ mod tests {
         assert!(report.joystick_x > AXIS_MAX, "x = {}", report.joystick_x);
         assert!(report.joystick_y > -ZERO_SLOP, "y = {}", report.joystick_y);
         assert!(report.joystick_y < ZERO_SLOP, "y = {}", report.joystick_y);
+        mock.done();
     }
 
     #[test]
@@ -349,10 +353,10 @@ mod tests {
             Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
             Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_JOY_U.to_vec()),
         ];
-        let mock = i2c::Mock::new(&expectations);
+        let mut mock = i2c::Mock::new(&expectations);
         let idle = NunchukReading::from_data(&test_data::NUNCHUCK_IDLE).unwrap();
         let mut nc = Nunchuk {
-            i2cdev: mock,
+            i2cdev: mock.clone(),
             calibration: CalibrationData {
                 joystick_x: idle.joystick_x,
                 joystick_y: idle.joystick_y,
@@ -364,6 +368,7 @@ mod tests {
         assert!(report.joystick_y > AXIS_MAX, "y = {}", report.joystick_y);
         assert!(report.joystick_x > -ZERO_SLOP, "x = {}", report.joystick_x);
         assert!(report.joystick_x < ZERO_SLOP, "x = {}", report.joystick_x);
+        mock.done();
     }
 
     #[test]
@@ -372,10 +377,10 @@ mod tests {
             Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
             Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_JOY_D.to_vec()),
         ];
-        let mock = i2c::Mock::new(&expectations);
+        let mut mock = i2c::Mock::new(&expectations);
         let idle = NunchukReading::from_data(&test_data::NUNCHUCK_IDLE).unwrap();
         let mut nc = Nunchuk {
-            i2cdev: mock,
+            i2cdev: mock.clone(),
             calibration: CalibrationData {
                 joystick_x: idle.joystick_x,
                 joystick_y: idle.joystick_y,
@@ -387,6 +392,7 @@ mod tests {
         assert!(report.joystick_y < -AXIS_MAX, "y = {}", report.joystick_y);
         assert!(report.joystick_x > -ZERO_SLOP, "x = {}", report.joystick_x);
         assert!(report.joystick_x < ZERO_SLOP, "x = {}", report.joystick_x);
+        mock.done();
     }
 
     #[test]
@@ -397,9 +403,9 @@ mod tests {
             Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
             Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_IDLE.to_vec()),
         ];
-        let mock = i2c::Mock::new(&expectations);
+        let mut mock = i2c::Mock::new(&expectations);
         let mut nc = Nunchuk {
-            i2cdev: mock,
+            i2cdev: mock.clone(),
             calibration: CalibrationData::default(),
         };
         let report = nc.read_no_wait().unwrap();
@@ -408,6 +414,7 @@ mod tests {
         let report = nc.read_no_wait().unwrap();
         assert!(!report.button_c);
         assert!(!report.button_z);
+        mock.done();
     }
 
     #[test]
@@ -416,14 +423,15 @@ mod tests {
             Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
             Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_BTN_C.to_vec()),
         ];
-        let mock = i2c::Mock::new(&expectations);
+        let mut mock = i2c::Mock::new(&expectations);
         let mut nc = Nunchuk {
-            i2cdev: mock,
+            i2cdev: mock.clone(),
             calibration: CalibrationData::default(),
         };
         let report = nc.read_no_wait().unwrap();
         assert!(report.button_c);
         assert!(!report.button_z);
+        mock.done();
     }
 
     #[test]
@@ -432,13 +440,14 @@ mod tests {
             Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
             Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_BTN_Z.to_vec()),
         ];
-        let mock = i2c::Mock::new(&expectations);
+        let mut mock = i2c::Mock::new(&expectations);
         let mut nc = Nunchuk {
-            i2cdev: mock,
+            i2cdev: mock.clone(),
             calibration: CalibrationData::default(),
         };
         let report = nc.read_no_wait().unwrap();
         assert!(!report.button_c);
         assert!(report.button_z);
+        mock.done();
     }
 }

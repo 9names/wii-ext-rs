@@ -1,5 +1,5 @@
-use embedded_hal_mock::delay::MockNoop;
-use embedded_hal_mock::i2c::{self, Transaction};
+use embedded_hal_mock::eh1::delay::NoopDelay;
+use embedded_hal_mock::eh1::i2c::{self, Transaction};
 use paste::paste;
 use wii_ext::classic_sync::*;
 use wii_ext::common::*;
@@ -50,11 +50,12 @@ fn classic_idle() {
         Transaction::read(EXT_I2C_ADDR as u8, test_data::PRO_IDLE.to_vec()),
     ];
 
-    let i2c = i2c::Mock::new(&expectations);
-    let mut delay = MockNoop::new();
-    let mut classic = Classic::new(i2c, &mut delay).unwrap();
+    let mut i2c = i2c::Mock::new(&expectations);
+    let mut delay = NoopDelay::new();
+    let mut classic = Classic::new(i2c.clone(), &mut delay).unwrap();
     let report = classic.read_report_blocking(&mut delay).unwrap();
     assert_digital_eq(report, ClassicReading::default());
+    i2c.done();
 }
 
 // We don't want to write all that out for every digital button, so let's write a macro instead.
@@ -83,30 +84,31 @@ fn classic_idle() {
 macro_rules! assert_button_fn {
     ( $x:ident, $y:ident ) => {
         paste! {
-            #[test]
-                fn [<test_ $x _on_ $y:lower>]()  {
-                let expectations = vec![
-                    // Reset controller
-                    Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
-                    // Init
-                    Transaction::write(EXT_I2C_ADDR as u8, vec![240, 85]),
-                    Transaction::write(EXT_I2C_ADDR as u8, vec![251, 0]),
-                    // Read
-                    Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
-                    Transaction::read(EXT_I2C_ADDR as u8, test_data::PRO_IDLE.to_vec()),
-                    Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
-                    Transaction::read(EXT_I2C_ADDR as u8, $y.to_vec()),
-                ];
-                let i2c = i2c::Mock::new(&expectations);
-                let mut delay = MockNoop::new();
-                let mut classic = Classic::new(i2c, &mut delay).unwrap();
-                let input = classic.read_report_blocking(&mut delay).unwrap();
-                assert_digital_eq(input, ClassicReading {
-                    $x: true,
-                    ..Default::default()
-                });
+                #[test]
+                    fn [<test_ $x _on_ $y:lower>]()  {
+                    let expectations = vec![
+                        // Reset controller
+                        Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+                        // Init
+                        Transaction::write(EXT_I2C_ADDR as u8, vec![240, 85]),
+                        Transaction::write(EXT_I2C_ADDR as u8, vec![251, 0]),
+                        // Read
+                        Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+                        Transaction::read(EXT_I2C_ADDR as u8, test_data::PRO_IDLE.to_vec()),
+                        Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+                        Transaction::read(EXT_I2C_ADDR as u8, $y.to_vec()),
+                    ];
+                    let mut i2c = i2c::Mock::new(&expectations);
+        let mut delay = NoopDelay::new();
+        let mut classic = Classic::new(i2c.clone(), &mut delay).unwrap();
+                    let input = classic.read_report_blocking(&mut delay).unwrap();
+                    assert_digital_eq(input, ClassicReading {
+                        $x: true,
+                        ..Default::default()
+                    });
+                    i2c.done();
+                }
             }
-        }
     };
 }
 
@@ -143,14 +145,15 @@ fn classic_calibrated_idle() {
         Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
         Transaction::read(EXT_I2C_ADDR as u8, test_data::PRO_IDLE.to_vec()),
     ];
-    let i2c = i2c::Mock::new(&expectations);
-    let mut delay = MockNoop::new();
-    let mut classic = Classic::new(i2c, &mut delay).unwrap();
+    let mut i2c = i2c::Mock::new(&expectations);
+    let mut delay = NoopDelay::new();
+    let mut classic = Classic::new(i2c.clone(), &mut delay).unwrap();
     let input = classic.read_blocking(&mut delay).unwrap();
     assert_eq!(input.joystick_left_x, 0);
     assert_eq!(input.joystick_left_y, 0);
     assert_eq!(input.joystick_right_x, 0);
     assert_eq!(input.joystick_right_y, 0);
+    i2c.done();
 }
 
 /// Test that no buttons are pressed when the controller is idle
@@ -169,9 +172,9 @@ fn classic_calibrated_joy_left() {
         Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
         Transaction::read(EXT_I2C_ADDR as u8, test_data::PRO_LJOY_L.to_vec()),
     ];
-    let i2c = i2c::Mock::new(&expectations);
-    let mut delay = MockNoop::new();
-    let mut classic = Classic::new(i2c, &mut delay).unwrap();
+    let mut i2c = i2c::Mock::new(&expectations);
+    let mut delay = NoopDelay::new();
+    let mut classic = Classic::new(i2c.clone(), &mut delay).unwrap();
     let input = classic.read_blocking(&mut delay).unwrap();
 
     assert!(
@@ -204,6 +207,8 @@ fn classic_calibrated_joy_left() {
         "trigger_right = {}",
         input.trigger_right
     );
+    let _ = classic;
+    i2c.done();
 }
 
 macro_rules! assert_joysticks {
@@ -216,70 +221,71 @@ macro_rules! assert_joysticks {
         $rtl:expr, $rth:expr
     ) => {
         paste! {
-            #[test]
-                fn [<test_calibrated_ $y:lower>]()  {
-                let expectations = vec![
-                    // Reset controller
-                    Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
-                    // Init
-                    Transaction::write(EXT_I2C_ADDR as u8, vec![240, 85]),
-                    Transaction::write(EXT_I2C_ADDR as u8, vec![251, 0]),
-                    // Calibration read
-                    Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
-                    Transaction::read(EXT_I2C_ADDR as u8, test_data::$x.to_vec()),
-                    // Input read
-                    Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
-                    Transaction::read(EXT_I2C_ADDR as u8, test_data::$y.to_vec()),
-                ];
-                let i2c = i2c::Mock::new(&expectations);
-                let mut delay = MockNoop::new();
-                let mut classic = Classic::new(i2c, &mut delay).unwrap();
-                let input = classic.read_blocking(&mut delay).unwrap();
+                #[test]
+                    fn [<test_calibrated_ $y:lower>]()  {
+                    let expectations = vec![
+                        // Reset controller
+                        Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+                        // Init
+                        Transaction::write(EXT_I2C_ADDR as u8, vec![240, 85]),
+                        Transaction::write(EXT_I2C_ADDR as u8, vec![251, 0]),
+                        // Calibration read
+                        Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+                        Transaction::read(EXT_I2C_ADDR as u8, test_data::$x.to_vec()),
+                        // Input read
+                        Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+                        Transaction::read(EXT_I2C_ADDR as u8, test_data::$y.to_vec()),
+                    ];
+                    let mut i2c = i2c::Mock::new(&expectations);
+        let mut delay = NoopDelay::new();
+        let mut classic = Classic::new(i2c.clone(), &mut delay).unwrap();
+                    let input = classic.read_blocking(&mut delay).unwrap();
 
-                assert!(
-                    ($lxl..=$lxh).contains(&input.joystick_left_x),
-                    "left_x = {}, expected between {} and {}",
-                    input.joystick_left_x,
-                    $lxl,
-                    $lxh
-                );
-                assert!(
-                    ($lyl..=$lyh).contains(&input.joystick_left_y),
-                    "left_y = {}, expected between {} and {}",
-                    input.joystick_left_y,
-                    $lyl,
-                    $lyh
-                );
-                assert!(
-                    ($rxl..=$rxh).contains(&input.joystick_right_x),
-                    "right_x = {}, expected between {} and {}",
-                    input.joystick_right_x,
-                    $rxl,
-                    $rxh
-                );
-                assert!(
-                    ($ryl..=$ryh).contains(&input.joystick_right_y),
-                    "right_y = {}, expected between {} and {}",
-                    input.joystick_right_y,
-                    $ryl,
-                    $ryh
-                );
-                assert!(
-                    ($ltl..=$lth).contains(&input.trigger_left),
-                    "trigger_left = {}, expected between {} and {}",
-                    input.trigger_left,
-                    $ltl,
-                    $lth
-                );
-                assert!(
-                    ($rtl..=$rth).contains(&input.trigger_right),
-                    "trigger_right = {}, expected between {} and {}",
-                    input.trigger_right,
-                    $rtl,
-                    $rth
-                );
+                    assert!(
+                        ($lxl..=$lxh).contains(&input.joystick_left_x),
+                        "left_x = {}, expected between {} and {}",
+                        input.joystick_left_x,
+                        $lxl,
+                        $lxh
+                    );
+                    assert!(
+                        ($lyl..=$lyh).contains(&input.joystick_left_y),
+                        "left_y = {}, expected between {} and {}",
+                        input.joystick_left_y,
+                        $lyl,
+                        $lyh
+                    );
+                    assert!(
+                        ($rxl..=$rxh).contains(&input.joystick_right_x),
+                        "right_x = {}, expected between {} and {}",
+                        input.joystick_right_x,
+                        $rxl,
+                        $rxh
+                    );
+                    assert!(
+                        ($ryl..=$ryh).contains(&input.joystick_right_y),
+                        "right_y = {}, expected between {} and {}",
+                        input.joystick_right_y,
+                        $ryl,
+                        $ryh
+                    );
+                    assert!(
+                        ($ltl..=$lth).contains(&input.trigger_left),
+                        "trigger_left = {}, expected between {} and {}",
+                        input.trigger_left,
+                        $ltl,
+                        $lth
+                    );
+                    assert!(
+                        ($rtl..=$rth).contains(&input.trigger_right),
+                        "trigger_right = {}, expected between {} and {}",
+                        input.trigger_right,
+                        $rtl,
+                        $rth
+                    );
+                    i2c.done();
+                }
             }
-        }
     };
 }
 
