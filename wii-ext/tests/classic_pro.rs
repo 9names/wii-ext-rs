@@ -84,31 +84,31 @@ fn classic_idle() {
 macro_rules! assert_button_fn {
     ( $x:ident, $y:ident ) => {
         paste! {
-                #[test]
-                    fn [<test_ $x _on_ $y:lower>]()  {
-                    let expectations = vec![
-                        // Reset controller
-                        Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
-                        // Init
-                        Transaction::write(EXT_I2C_ADDR as u8, vec![240, 85]),
-                        Transaction::write(EXT_I2C_ADDR as u8, vec![251, 0]),
-                        // Read
-                        Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
-                        Transaction::read(EXT_I2C_ADDR as u8, test_data::PRO_IDLE.to_vec()),
-                        Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
-                        Transaction::read(EXT_I2C_ADDR as u8, $y.to_vec()),
-                    ];
-                    let mut i2c = i2c::Mock::new(&expectations);
-        let mut delay = NoopDelay::new();
-        let mut classic = Classic::new(i2c.clone(), &mut delay).unwrap();
-                    let input = classic.read_report_blocking(&mut delay).unwrap();
-                    assert_digital_eq(input, ClassicReading {
-                        $x: true,
-                        ..Default::default()
-                    });
-                    i2c.done();
-                }
+            #[test]
+                fn [<test_ $x _on_ $y:lower>]()  {
+                let expectations = vec![
+                    // Reset controller
+                    Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+                    // Init
+                    Transaction::write(EXT_I2C_ADDR as u8, vec![240, 85]),
+                    Transaction::write(EXT_I2C_ADDR as u8, vec![251, 0]),
+                    // Read
+                    Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+                    Transaction::read(EXT_I2C_ADDR as u8, test_data::PRO_IDLE.to_vec()),
+                    Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+                    Transaction::read(EXT_I2C_ADDR as u8, $y.to_vec()),
+                ];
+                let mut i2c = i2c::Mock::new(&expectations);
+                let mut delay = NoopDelay::new();
+                let mut classic = Classic::new(i2c.clone(), &mut delay).unwrap();
+                let input = classic.read_report_blocking(&mut delay).unwrap();
+                assert_digital_eq(input, ClassicReading {
+                    $x: true,
+                    ..Default::default()
+                });
+                i2c.done();
             }
+        }
     };
 }
 
