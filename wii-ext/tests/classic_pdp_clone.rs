@@ -1,5 +1,5 @@
-use embedded_hal_mock::delay::MockNoop;
-use embedded_hal_mock::i2c::{self, Transaction};
+use embedded_hal_mock::eh1::delay::NoopDelay;
+use embedded_hal_mock::eh1::i2c::{self, Transaction};
 use paste::paste;
 use wii_ext::classic_sync::*;
 use wii_ext::common::*;
@@ -50,11 +50,12 @@ fn classic_idle() {
         Transaction::read(EXT_I2C_ADDR as u8, test_data::PDP_LINK_IDLE.to_vec()),
     ];
 
-    let i2c = i2c::Mock::new(&expectations);
-    let mut delay = MockNoop::new();
-    let mut classic = Classic::new(i2c, &mut delay).unwrap();
+    let mut i2c = i2c::Mock::new(&expectations);
+    let mut delay = NoopDelay::new();
+    let mut classic = Classic::new(i2c.clone(), &mut delay).unwrap();
     let report = classic.read_report_blocking(&mut delay).unwrap();
     assert_digital_eq(report, ClassicReading::default());
+    i2c.done();
 }
 
 // We don't want to write all that out for every digital button, so let's write a macro instead.
@@ -97,14 +98,15 @@ macro_rules! assert_button_fn {
                     Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
                     Transaction::read(EXT_I2C_ADDR as u8, $y.to_vec()),
                 ];
-                let i2c = i2c::Mock::new(&expectations);
-                let mut delay = MockNoop::new();
-                let mut classic = Classic::new(i2c, &mut delay).unwrap();
+                let mut i2c = i2c::Mock::new(&expectations);
+                let mut delay = NoopDelay::new();
+                let mut classic = Classic::new(i2c.clone(), &mut delay).unwrap();
                 let input = classic.read_report_blocking(&mut delay).unwrap();
                 assert_digital_eq(input, ClassicReading {
                     $x: true,
                     ..Default::default()
                 });
+                i2c.done();
             }
         }
     };
@@ -143,14 +145,15 @@ fn classic_calibrated_idle() {
         Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
         Transaction::read(EXT_I2C_ADDR as u8, test_data::PDP_LINK_IDLE.to_vec()),
     ];
-    let i2c = i2c::Mock::new(&expectations);
-    let mut delay = MockNoop::new();
-    let mut classic = Classic::new(i2c, &mut delay).unwrap();
+    let mut i2c = i2c::Mock::new(&expectations);
+    let mut delay = NoopDelay::new();
+    let mut classic = Classic::new(i2c.clone(), &mut delay).unwrap();
     let input = classic.read_blocking(&mut delay).unwrap();
     assert_eq!(input.joystick_left_x, 0);
     assert_eq!(input.joystick_left_y, 0);
     assert_eq!(input.joystick_right_x, 0);
     assert_eq!(input.joystick_right_y, 0);
+    i2c.done();
 }
 
 /// Test that no buttons are pressed when the controller is idle
@@ -169,9 +172,9 @@ fn classic_calibrated_joy_left() {
         Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
         Transaction::read(EXT_I2C_ADDR as u8, test_data::PDP_LINK_LJOY_L.to_vec()),
     ];
-    let i2c = i2c::Mock::new(&expectations);
-    let mut delay = MockNoop::new();
-    let mut classic = Classic::new(i2c, &mut delay).unwrap();
+    let mut i2c = i2c::Mock::new(&expectations);
+    let mut delay = NoopDelay::new();
+    let mut classic = Classic::new(i2c.clone(), &mut delay).unwrap();
     let input = classic.read_blocking(&mut delay).unwrap();
 
     assert!(
@@ -204,6 +207,7 @@ fn classic_calibrated_joy_left() {
         "trigger_right = {}",
         input.trigger_right
     );
+    i2c.done();
 }
 
 macro_rules! assert_joysticks {
@@ -231,9 +235,9 @@ macro_rules! assert_joysticks {
                     Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
                     Transaction::read(EXT_I2C_ADDR as u8, test_data::$y.to_vec()),
                 ];
-                let i2c = i2c::Mock::new(&expectations);
-                let mut delay = MockNoop::new();
-                let mut classic = Classic::new(i2c, &mut delay).unwrap();
+                let mut i2c = i2c::Mock::new(&expectations);
+                let mut delay = NoopDelay::new();
+                let mut classic = Classic::new(i2c.clone(), &mut delay).unwrap();
                 let input = classic.read_blocking(&mut delay).unwrap();
 
                 assert!(
@@ -278,6 +282,7 @@ macro_rules! assert_joysticks {
                     $rtl,
                     $rth
                 );
+                i2c.done();
             }
         }
     };

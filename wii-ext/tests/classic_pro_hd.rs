@@ -1,5 +1,5 @@
-use embedded_hal_mock::delay::MockNoop;
-use embedded_hal_mock::i2c::{self, Transaction};
+use embedded_hal_mock::eh1::delay::NoopDelay;
+use embedded_hal_mock::eh1::i2c::{self, Transaction};
 use paste::paste;
 use wii_ext::classic_sync::*;
 use wii_ext::*;
@@ -45,9 +45,9 @@ macro_rules! assert_joystick_hd {
                     Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
                     Transaction::read(EXT_I2C_ADDR as u8, test_data::$y.to_vec()),
                 ];
-                let i2c = i2c::Mock::new(&expectations);
-                let mut delay = MockNoop::new();
-                let mut classic = Classic::new(i2c, &mut delay).unwrap();
+                let mut i2c = i2c::Mock::new(&expectations);
+                let mut delay = NoopDelay::new();
+                let mut classic = Classic::new(i2c.clone(), &mut delay).unwrap();
                 classic.enable_hires(&mut delay).unwrap();
                 let input = classic.read_blocking(&mut delay).unwrap();
 
@@ -93,6 +93,7 @@ macro_rules! assert_joystick_hd {
                     $rtl,
                     $rth
                 );
+                i2c.done();
             }
         }
     };

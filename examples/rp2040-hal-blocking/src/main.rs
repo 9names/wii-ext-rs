@@ -8,17 +8,17 @@ use defmt::*;
 use defmt_rtt as _;
 use panic_probe as _;
 
-use rp_pico as bsp;
 use bsp::hal::{
     self,
-    entry,
     clocks::{init_clocks_and_plls, Clock},
+    entry,
     gpio::FunctionI2C,
     pac,
     sio::Sio,
     watchdog::Watchdog,
 };
 use fugit::RateExtU32;
+use rp_pico as bsp;
 use wii_ext::{classic_sync::Classic, core::classic::ClassicReadingCalibrated};
 
 use usb_device::class_prelude::*;
