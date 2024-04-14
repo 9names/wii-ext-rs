@@ -117,6 +117,12 @@ mod tests {
     #[test]
     fn nunchuck_idle() {
         let expectations = vec![
+            // Reset controller
+            Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+            // Init
+            Transaction::write(EXT_I2C_ADDR as u8, vec![240, 85]),
+            Transaction::write(EXT_I2C_ADDR as u8, vec![251, 0]),
+            // Read
             Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
             Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_IDLE.to_vec()),
         ];
@@ -133,6 +139,15 @@ mod tests {
     #[test]
     fn nunchuck_idle_calibrated() {
         let expectations = vec![
+            // Reset controller
+            Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+            // Init
+            Transaction::write(EXT_I2C_ADDR as u8, vec![240, 85]),
+            Transaction::write(EXT_I2C_ADDR as u8, vec![251, 0]),
+            // Calibration read
+            Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+            Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_IDLE.to_vec()),
+            // Read
             Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
             Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_IDLE.to_vec()),
         ];
@@ -150,6 +165,15 @@ mod tests {
     #[test]
     fn nunchuck_left_calibrated() {
         let expectations = vec![
+            // Reset controller
+            Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+            // Init
+            Transaction::write(EXT_I2C_ADDR as u8, vec![240, 85]),
+            Transaction::write(EXT_I2C_ADDR as u8, vec![251, 0]),
+            // Calibration read
+            Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+            Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_IDLE.to_vec()),
+            // Read
             Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
             Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_JOY_L.to_vec()),
         ];
@@ -168,6 +192,15 @@ mod tests {
     #[test]
     fn nunchuck_right_calibrated() {
         let expectations = vec![
+            // Reset controller
+            Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+            // Init
+            Transaction::write(EXT_I2C_ADDR as u8, vec![240, 85]),
+            Transaction::write(EXT_I2C_ADDR as u8, vec![251, 0]),
+            // Calibration read
+            Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+            Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_IDLE.to_vec()),
+            // Read
             Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
             Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_JOY_R.to_vec()),
         ];
@@ -186,6 +219,15 @@ mod tests {
     #[test]
     fn nunchuck_up_calibrated() {
         let expectations = vec![
+            // Reset controller
+            Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+            // Init
+            Transaction::write(EXT_I2C_ADDR as u8, vec![240, 85]),
+            Transaction::write(EXT_I2C_ADDR as u8, vec![251, 0]),
+            // Calibration read
+            Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+            Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_IDLE.to_vec()),
+            // Read
             Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
             Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_JOY_U.to_vec()),
         ];
@@ -204,6 +246,15 @@ mod tests {
     #[test]
     fn nunchuck_down_calibrated() {
         let expectations = vec![
+            // Reset controller
+            Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+            // Init
+            Transaction::write(EXT_I2C_ADDR as u8, vec![240, 85]),
+            Transaction::write(EXT_I2C_ADDR as u8, vec![251, 0]),
+            // Calibration read
+            Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+            Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_IDLE.to_vec()),
+            // Read
             Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
             Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_JOY_D.to_vec()),
         ];
@@ -222,6 +273,12 @@ mod tests {
     #[test]
     fn nunchuck_idle_repeat() {
         let expectations = vec![
+            // Reset controller
+            Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+            // Init
+            Transaction::write(EXT_I2C_ADDR as u8, vec![240, 85]),
+            Transaction::write(EXT_I2C_ADDR as u8, vec![251, 0]),
+            // Read
             Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
             Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_IDLE.to_vec()),
             Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
@@ -243,6 +300,12 @@ mod tests {
     #[test]
     fn nunchuck_btn_c() {
         let expectations = vec![
+            // Reset controller
+            Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+            // Init
+            Transaction::write(EXT_I2C_ADDR as u8, vec![240, 85]),
+            Transaction::write(EXT_I2C_ADDR as u8, vec![251, 0]),
+            // Read
             Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
             Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_BTN_C.to_vec()),
         ];
@@ -259,6 +322,12 @@ mod tests {
     #[test]
     fn nunchuck_btn_z() {
         let expectations = vec![
+            // Reset controller
+            Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+            // Init
+            Transaction::write(EXT_I2C_ADDR as u8, vec![240, 85]),
+            Transaction::write(EXT_I2C_ADDR as u8, vec![251, 0]),
+            // Read
             Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
             Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_BTN_Z.to_vec()),
         ];
