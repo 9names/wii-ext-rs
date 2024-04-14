@@ -11,14 +11,9 @@
 // See `decode_classic_report` and `decode_classic_hd_report` for data format
 
 use crate::core::classic::*;
-use crate::ControllerIdReport;
-use crate::ControllerType;
-use crate::ExtHdReport;
-use crate::ExtReport;
-use crate::EXT_I2C_ADDR;
-use crate::INTERMESSAGE_DELAY_MICROSEC_U32 as INTERMESSAGE_DELAY_MICROSEC;
-use embedded_hal::i2c::I2c;
 use crate::interface::Interface;
+use crate::ControllerType;
+use embedded_hal::i2c::I2c;
 
 #[cfg(feature = "defmt_print")]
 use defmt;
@@ -33,25 +28,12 @@ pub enum ClassicError<E> {
 
 use crate::interface::Error;
 
-// #[cfg_attr(feature = "defmt_print", derive(defmt::Format))]
-// /// Errors in this crate
-// #[derive(Debug)]
-// pub enum Error<E> {
-//     /// I²C bus communication error
-//     I2C(E),
-//     /// Invalid input data provided
-//     InvalidInputData,
-// }
-
 pub struct Classic<I2C, DELAY> {
-    // i2cdev: I2C,
     interface: Interface<I2C, DELAY>,
     hires: bool,
     calibration: CalibrationData,
-    // delay: DELAY,
 }
 
-// use crate::nunchuk;
 impl<T, E, DELAY> Classic<T, DELAY>
 where
     T: I2c<SevenBitAddress, Error = E>,
@@ -89,31 +71,6 @@ where
             trigger_right: data.trigger_left,
         };
         Ok(())
-    }
-
-    /// Set the cursor position for the next i2c read
-    ///
-    /// This hardware has a range of 100 registers and automatically
-    /// increments the register read postion on each read operation, and also on
-    /// every write operation.
-    /// This should be called before a read operation to ensure you get the correct data
-    fn set_read_register_address(&mut self, byte0: u8) -> Result<(), Error<E>> {
-        self.interface.set_read_register_address(byte0)
-    }
-
-    /// Set a single register at target address
-    fn set_register(&mut self, addr: u8, byte1: u8) -> Result<(), Error<E>> {
-        self.interface.set_register(addr, byte1)
-    }
-
-    /// Read the button/axis data from the classic controller
-    fn read_report(&mut self) -> Result<ExtReport, Error<E>> {
-        self.interface.read_report()
-    }
-
-    /// Read a high-resolution version of the button/axis data from the classic controller
-    fn read_hd_report(&mut self) -> Result<ExtHdReport, Error<E>> {
-        self.interface.read_hd_report()
     }
 
     /// Send the init sequence to the Wii extension controller
@@ -160,21 +117,8 @@ where
         Ok(())
     }
 
-    fn read_id(&mut self) -> Result<ControllerIdReport, Error<E>> {
-        self.set_read_register_address(0xfa)?;
-        let i2c_id = self.interface.read_report()?;
-        Ok(i2c_id)
-    }
-
     pub fn identify_controller(&mut self) -> Result<Option<ControllerType>, Error<E>> {
-        let i2c_id = self.read_id()?;
-        Ok(crate::common::identify_controller(i2c_id))
-    }
-
-    /// tell the extension controller to prepare a sample by setting the read cursor to 0
-    fn start_sample(&mut self) -> Result<(), Error<E>> {
-        self.set_read_register_address(0x00)?;
-        Ok(())
+        self.interface.identify_controller()
     }
 
     /// poll the controller for the latest data

@@ -28,12 +28,8 @@ where
     Delay: embedded_hal::delay::DelayNs,
 {
     pub fn new(i2cdev: I2C, delay: Delay) -> Interface<I2C, Delay> {
-        Interface {
-            i2cdev,
-            delay,
-        }
+        Interface { i2cdev, delay }
     }
-
 
     /// Send the init sequence to the Wii extension controller
     pub(super) fn init(&mut self) -> Result<(), Error<E>> {
@@ -55,7 +51,7 @@ where
         self.delay.delay_us(INTERMESSAGE_DELAY_MICROSEC * 2);
         Ok(())
     }
-    
+
     pub(super) fn read_id(&mut self) -> Result<ControllerIdReport, Error<E>> {
         self.set_read_register_address(0xfa)?;
         let i2c_id = self.read_report()?;
@@ -66,7 +62,7 @@ where
         let i2c_id = self.read_id()?;
         Ok(crate::common::identify_controller(i2c_id))
     }
-    
+
     /// tell the extension controller to prepare a sample by setting the read cursor to 0
     pub(super) fn start_sample(&mut self) -> Result<(), Error<E>> {
         self.set_read_register_address(0x00)?;
@@ -101,7 +97,6 @@ where
             .and(Ok(()))
     }
 
-
     /// Read the button/axis data from the classic controller
     pub(super) fn read_report(&mut self) -> Result<ExtReport, Error<E>> {
         let mut buffer: ExtReport = ExtReport::default();
@@ -133,5 +128,4 @@ where
             .map_err(Error::I2C)
             .and(Ok(buffer))
     }
-    
 }
