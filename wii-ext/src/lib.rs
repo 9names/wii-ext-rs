@@ -14,6 +14,8 @@ pub mod common;
 
 /// i2c interface code
 pub mod interface;
+/// async i2c interface code
+pub mod interface_async;
 
 pub mod nunchuk;
 
