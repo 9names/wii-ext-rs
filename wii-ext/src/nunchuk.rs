@@ -69,7 +69,8 @@ where
         // These registers must be written to disable encryption.; the documentation is a bit
         // lacking but it appears this is some kind of handshake to
         // perform unencrypted data tranfers
-        self.interface.init()
+        self.interface.init()?;
+        self.update_calibration()
     }
 
     pub fn identify_controller(&mut self) -> Result<Option<ControllerType>, Error<ERR>> {
