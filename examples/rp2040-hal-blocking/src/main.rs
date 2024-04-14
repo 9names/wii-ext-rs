@@ -12,19 +12,21 @@ use bsp::hal::{
     self,
     clocks::{init_clocks_and_plls, Clock},
     entry,
-    gpio::FunctionI2C,
+    gpio,
     pac,
     sio::Sio,
+    Timer,
     watchdog::Watchdog,
 };
 use fugit::RateExtU32;
 use rp_pico as bsp;
 use wii_ext::{classic_sync::Classic, core::classic::ClassicReadingCalibrated};
 
-use usb_device::class_prelude::*;
-use usb_device::prelude::*;
-use usbd_human_interface_device::device::joystick::JoystickReport;
-use usbd_human_interface_device::prelude::*;
+// use embedded_hal::Delay::delay_ms;
+// use usb_device::class_prelude::*;
+// use usb_device::prelude::*;
+// use usbd_human_interface_device::device::joystick::JoystickReport;
+// use usbd_human_interface_device::prelude::*;
 
 #[entry]
 fn main() -> ! {
@@ -48,7 +50,8 @@ fn main() -> ! {
     .ok()
     .unwrap();
 
-    let mut delay = cortex_m::delay::Delay::new(core.SYST, clocks.system_clock.freq().to_Hz());
+    // let mut delay = cortex_m::delay::Delay::new(core.SYST, clocks.system_clock.freq().to_Hz());
+    let mut delay = Timer::new(pac.TIMER, &mut pac.RESETS, &clocks);
 
     let pins = bsp::Pins::new(
         pac.IO_BANK0,
@@ -57,27 +60,27 @@ fn main() -> ! {
         &mut pac.RESETS,
     );
 
-    let usb_bus = UsbBusAllocator::new(hal::usb::UsbBus::new(
-        pac.USBCTRL_REGS,
-        pac.USBCTRL_DPRAM,
-        clocks.usb_clock,
-        true,
-        &mut pac.RESETS,
-    ));
+    // let usb_bus = UsbBusAllocator::new(hal::usb::UsbBus::new(
+    //     pac.USBCTRL_REGS,
+    //     pac.USBCTRL_DPRAM,
+    //     clocks.usb_clock,
+    //     true,
+    //     &mut pac.RESETS,
+    // ));
 
-    let mut joy = UsbHidClassBuilder::new()
-        .add_device(usbd_human_interface_device::device::joystick::JoystickConfig::default())
-        .build(&usb_bus);
+    // let mut joy = UsbHidClassBuilder::new()
+    //     .add_device(usbd_human_interface_device::device::joystick::JoystickConfig::default())
+    //     .build(&usb_bus);
 
-    //https://pid.codes
-    let mut usb_dev = UsbDeviceBuilder::new(&usb_bus, UsbVidPid(0x1209, 0x0001))
-        .manufacturer("usbd-human-interface-device")
-        .product("Rusty joystick")
-        .serial_number("TEST")
-        .build();
+    // //https://pid.codes
+    // let mut usb_dev = UsbDeviceBuilder::new(&usb_bus, UsbVidPid(0x1209, 0x0001))
+    //     .manufacturer("usbd-human-interface-device")
+    //     .product("Rusty joystick")
+    //     .serial_number("TEST")
+    //     .build();
 
-    let sda_pin = pins.gpio8.into_function::<FunctionI2C>();
-    let scl_pin = pins.gpio9.into_function::<FunctionI2C>();
+    let sda_pin: gpio::Pin<_, gpio::FunctionI2C, _> = pins.gpio8.reconfigure();
+    let scl_pin: gpio::Pin<_, gpio::FunctionI2C, _> = pins.gpio9.reconfigure();
 
     let i2c = bsp::hal::I2C::i2c0(
         pac.I2C0,
@@ -108,13 +111,13 @@ fn main() -> ! {
         // Capture the current button and axis values
         let input = controller.read_blocking(&mut delay);
         if let Ok(input) = input {
-            match joy.device().write_report(&get_report(&input)) {
-                Err(UsbHidError::WouldBlock) => {}
-                Ok(_) => {}
-                Err(e) => {
-                    core::panic!("Failed to write joystick report: {:?}", e)
-                }
-            }
+            // match joy.device().write_report(&get_report(&input)) {
+            //     Err(UsbHidError::WouldBlock) => {}
+            //     Ok(_) => {}
+            //     Err(e) => {
+            //         core::panic!("Failed to write joystick report: {:?}", e)
+            //     }
+            // }
             // Print inputs from the controller
             debug!("{:?}", input);
         } else {
@@ -125,28 +128,28 @@ fn main() -> ! {
             }
         }
 
-        if usb_dev.poll(&mut [&mut joy]) {}
+        // if usb_dev.poll(&mut [&mut joy]) {}
     }
 }
 
-fn get_report(input: &ClassicReadingCalibrated) -> JoystickReport {
-    // Read out buttons first
-    let mut buttons = 0;
+// fn get_report(input: &ClassicReadingCalibrated) -> JoystickReport {
+//     // Read out buttons first
+//     let mut buttons = 0;
 
-    buttons += input.button_b as u8;
-    buttons += (input.button_a as u8) << 1;
-    buttons += (input.button_y as u8) << 2;
-    buttons += (input.button_x as u8) << 3;
-    buttons += (input.button_trigger_l as u8) << 4;
-    buttons += (input.button_trigger_r as u8) << 5;
-    buttons += (input.button_minus as u8) << 6;
-    buttons += (input.button_plus as u8) << 7;
+//     buttons += input.button_b as u8;
+//     buttons += (input.button_a as u8) << 1;
+//     buttons += (input.button_y as u8) << 2;
+//     buttons += (input.button_x as u8) << 3;
+//     buttons += (input.button_trigger_l as u8) << 4;
+//     buttons += (input.button_trigger_r as u8) << 5;
+//     buttons += (input.button_minus as u8) << 6;
+//     buttons += (input.button_plus as u8) << 7;
 
-    JoystickReport {
-        buttons,
-        x: input.joystick_left_x,
-        y: -input.joystick_left_y,
-    }
-}
+//     JoystickReport {
+//         buttons,
+//         x: input.joystick_left_x,
+//         y: -input.joystick_left_y,
+//     }
+// }
 
 // End of file
