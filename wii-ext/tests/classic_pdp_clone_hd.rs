@@ -46,10 +46,10 @@ macro_rules! assert_joystick_hd {
                     Transaction::read(EXT_I2C_ADDR as u8, test_data::$y.to_vec()),
                 ];
                 let mut i2c = i2c::Mock::new(&expectations);
-                let mut delay = NoopDelay::new();
-                let mut classic = Classic::new(i2c.clone(), &mut delay).unwrap();
-                classic.enable_hires(&mut delay).unwrap();
-                let input = classic.read_blocking(&mut delay).unwrap();
+                let delay = NoopDelay::new();
+                let mut classic = Classic::new(i2c.clone(), delay).unwrap();
+                classic.enable_hires().unwrap();
+                let input = classic.read_blocking().unwrap();
 
                 assert!(
                     ($lxl..=$lxh).contains(&input.joystick_left_x),

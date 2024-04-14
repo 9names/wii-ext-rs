@@ -49,9 +49,9 @@ fn classic_idle() {
     ];
 
     let mut i2c = i2c::Mock::new(&expectations);
-    let mut delay = NoopDelay::new();
-    let mut classic = Classic::new(i2c.clone(), &mut delay).unwrap();
-    let report = classic.read_report_blocking(&mut delay).unwrap();
+    let delay = NoopDelay::new();
+    let mut classic = Classic::new(i2c.clone(), delay).unwrap();
+    let report = classic.read_report_blocking().unwrap();
     assert_digital_eq(report, ClassicReading::default());
     i2c.done();
 }
@@ -97,9 +97,9 @@ macro_rules! assert_button_fn {
                     Transaction::read(EXT_I2C_ADDR as u8, $y.to_vec()),
                 ];
                 let mut i2c = i2c::Mock::new(&expectations);
-                let mut delay = NoopDelay::new();
-                let mut classic = Classic::new(i2c.clone(), &mut delay).unwrap();
-                let input = classic.read_report_blocking(&mut delay).unwrap();
+                let delay = NoopDelay::new();
+                let mut classic = Classic::new(i2c.clone(), delay).unwrap();
+                let input = classic.read_report_blocking().unwrap();
                 assert_digital_eq(input, ClassicReading {
                     $x: true,
                     ..Default::default()
@@ -144,9 +144,9 @@ fn classic_calibrated_idle() {
         Transaction::read(EXT_I2C_ADDR as u8, test_data::CLASSIC_IDLE.to_vec()),
     ];
     let mut i2c = i2c::Mock::new(&expectations);
-    let mut delay = NoopDelay::new();
-    let mut classic = Classic::new(i2c.clone(), &mut delay).unwrap();
-    let input = classic.read_blocking(&mut delay).unwrap();
+    let delay = NoopDelay::new();
+    let mut classic = Classic::new(i2c.clone(), delay).unwrap();
+    let input = classic.read_blocking().unwrap();
     assert_eq!(input.joystick_left_x, 0);
     assert_eq!(input.joystick_left_y, 0);
     assert_eq!(input.joystick_right_x, 0);
@@ -174,9 +174,9 @@ fn classic_calibrated_joy_left() {
         Transaction::read(EXT_I2C_ADDR as u8, test_data::CLASSIC_LJOY_L.to_vec()),
     ];
     let mut i2c = i2c::Mock::new(&expectations);
-    let mut delay = NoopDelay::new();
-    let mut classic = Classic::new(i2c.clone(), &mut delay).unwrap();
-    let input = classic.read_blocking(&mut delay).unwrap();
+    let delay = NoopDelay::new();
+    let mut classic = Classic::new(i2c.clone(), delay).unwrap();
+    let input = classic.read_blocking().unwrap();
 
     assert!(
         (i8::MIN..=-AXIS_MAX).contains(&input.joystick_left_x),
@@ -237,9 +237,9 @@ macro_rules! assert_joysticks {
                     Transaction::read(EXT_I2C_ADDR as u8, test_data::$y.to_vec()),
                 ];
                 let mut i2c = i2c::Mock::new(&expectations);
-                let mut delay = NoopDelay::new();
-                let mut classic = Classic::new(i2c.clone(), &mut delay).unwrap();
-                let input = classic.read_blocking(&mut delay).unwrap();
+                let delay = NoopDelay::new();
+                let mut classic = Classic::new(i2c.clone(), delay).unwrap();
+                let input = classic.read_blocking().unwrap();
 
                 assert!(
                     ($lxl..=$lxh).contains(&input.joystick_left_x),
