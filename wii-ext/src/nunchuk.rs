@@ -7,15 +7,9 @@
 // TODO: nunchuk technically supports HD report, but the last two bytes will be zeroes
 // work out if it's worth supporting that
 
-use crate::ControllerIdReport;
+use crate::core::nunchuk::{CalibrationData, NunchukReading, NunchukReadingCalibrated};
+use crate::interface::Interface;
 use crate::ControllerType;
-use crate::ExtReport;
-use crate::EXT_I2C_ADDR;
-use crate::INTERMESSAGE_DELAY_MICROSEC_U32 as INTERMESSAGE_DELAY_MICROSEC;
-use embedded_hal::delay::DelayNs;
-
-#[cfg(feature = "defmt_print")]
-use defmt;
 use embedded_hal::i2c::{I2c, SevenBitAddress};
 
 #[derive(Debug)]
@@ -24,114 +18,30 @@ pub enum NunchukError<E> {
     ParseError,
 }
 
-/// Errors in this crate
-#[derive(Debug)]
-pub enum Error<E> {
-    /// I²C bus communication error
-    I2C(E),
-    /// Invalid input data provided
-    InvalidInputData,
-}
+use crate::interface::Error;
 
-#[cfg_attr(feature = "defmt_print", derive(defmt::Format))]
-#[derive(Debug)]
-pub struct NunchukReading {
-    pub joystick_x: u8,
-    pub joystick_y: u8,
-    pub accel_x: u16, // 10-bit
-    pub accel_y: u16, // 10-bit
-    pub accel_z: u16, // 10-bit
-    pub button_c: bool,
-    pub button_z: bool,
-}
-
-impl NunchukReading {
-    pub fn from_data(data: &[u8]) -> Option<NunchukReading> {
-        if data.len() < 6 {
-            None
-        } else {
-            Some(NunchukReading {
-                joystick_x: data[0],
-                joystick_y: data[1],
-                accel_x: (u16::from(data[2]) << 2) | ((u16::from(data[5]) >> 6) & 0b11),
-                accel_y: (u16::from(data[3]) << 2) | ((u16::from(data[5]) >> 4) & 0b11),
-                accel_z: (u16::from(data[4]) << 2) | ((u16::from(data[5]) >> 2) & 0b11),
-                button_c: (data[5] & 0b10) == 0,
-                button_z: (data[5] & 0b01) == 0,
-            })
-        }
-    }
-}
-
-/// Relaxed/Center positions for each axis
-///
-/// These are used to calculate the relative deflection of each access from their center point
-#[derive(Default)]
-pub struct CalibrationData {
-    pub joystick_x: u8,
-    pub joystick_y: u8,
-}
-
-/// Data from a Nunchuk after calibration data has been applied
-///
-/// Calibration is done by subtracting the resting values from the current
-/// values, which means that going lower on the axis will go negative.
-/// Due to this, we now store analog values as signed integers
-///
-/// We'll only calibrate the joystick axes, leave accelerometer readings as-is
-#[cfg_attr(feature = "defmt_print", derive(defmt::Format))]
-#[derive(Debug, Default)]
-pub struct NunchukReadingCalibrated {
-    pub joystick_x: i8,
-    pub joystick_y: i8,
-    pub accel_x: u16, // 10-bit
-    pub accel_y: u16, // 10-bit
-    pub accel_z: u16, // 10-bit
-    pub button_c: bool,
-    pub button_z: bool,
-}
-
-impl NunchukReadingCalibrated {
-    pub fn new(r: NunchukReading, c: &CalibrationData) -> NunchukReadingCalibrated {
-        /// Just in case `data` minus `calibration data` is out of range, perform all operations
-        /// on i16 and clamp to i8 limits before returning
-        fn ext_u8_sub(a: u8, b: u8) -> i8 {
-            let res = (a as i16) - (b as i16);
-            res.clamp(i8::MIN as i16, i8::MAX as i16) as i8
-        }
-
-        NunchukReadingCalibrated {
-            joystick_x: ext_u8_sub(r.joystick_x, c.joystick_x),
-            joystick_y: ext_u8_sub(r.joystick_y, c.joystick_y),
-            accel_x: r.accel_x,
-            accel_y: r.accel_y, // 10-bit
-            accel_z: r.accel_z, // 10-bit
-            button_c: r.button_c,
-            button_z: r.button_z,
-        }
-    }
-}
-
-pub struct Nunchuk<I2C> {
-    i2cdev: I2C,
+pub struct Nunchuk<I2C, DELAY> {
+    interface: Interface<I2C, DELAY>,
     calibration: CalibrationData,
 }
 
-impl<T, E> Nunchuk<T>
+impl<I2C, ERR, DELAY> Nunchuk<I2C, DELAY>
 where
-    T: I2c<SevenBitAddress, Error = E>,
+    I2C: I2c<SevenBitAddress, Error = ERR>,
+    DELAY: embedded_hal::delay::DelayNs,
 {
     /// Create a new Wii Nunchuk
     ///
     /// This method will open the provide i2c device file and will
     /// send the required init sequence in order to read data in
     /// the future.
-    pub fn new<D: DelayNs>(i2cdev: T, delay: &mut D) -> Result<Nunchuk<T>, Error<E>> {
+    pub fn new(i2cdev: I2C, delay: DELAY) -> Result<Nunchuk<I2C, DELAY>, Error<ERR>> {
+        let interface = Interface::new(i2cdev, delay);
         let mut nunchuk = Nunchuk {
-            i2cdev,
+            interface,
             calibration: CalibrationData::default(),
         };
-        nunchuk.init(delay)?;
+        nunchuk.init()?;
         Ok(nunchuk)
     }
 
@@ -139,8 +49,8 @@ where
     ///
     /// Since each device will have different tolerances, we take a snapshot of some analog data
     /// to use as the "baseline" center.
-    pub fn update_calibration<D: DelayNs>(&mut self, delay: &mut D) -> Result<(), Error<E>> {
-        let data = self.read_report_blocking(delay)?;
+    pub fn update_calibration(&mut self) -> Result<(), Error<ERR>> {
+        let data = self.read_report_blocking()?;
 
         self.calibration = CalibrationData {
             joystick_x: data.joystick_x,
@@ -149,98 +59,35 @@ where
         Ok(())
     }
 
-    fn set_read_register_address(&mut self, address: u8) -> Result<(), Error<E>> {
-        self.i2cdev
-            .write(EXT_I2C_ADDR as u8, &[address])
-            .map_err(Error::I2C)
-    }
-
-    fn set_register(&mut self, reg: u8, val: u8) -> Result<(), Error<E>> {
-        self.i2cdev
-            .write(EXT_I2C_ADDR as u8, &[reg, val])
-            .map_err(Error::I2C)
-    }
-
-    fn read_report(&mut self) -> Result<ExtReport, Error<E>> {
-        let mut buffer: ExtReport = ExtReport::default();
-        self.i2cdev
-            .read(EXT_I2C_ADDR as u8, &mut buffer)
-            .map_err(Error::I2C)
-            .and(Ok(buffer))
-    }
-
     /// Send the init sequence to the Wii extension controller
-    pub fn init<D: DelayNs>(&mut self, delay: &mut D) -> Result<(), Error<E>> {
+    pub fn init(&mut self) -> Result<(), Error<ERR>> {
         // These registers must be written to disable encryption.; the documentation is a bit
         // lacking but it appears this is some kind of handshake to
         // perform unencrypted data tranfers
-        // Double all the delays here, we sometimes get connection issues otherwise
-        delay.delay_us(INTERMESSAGE_DELAY_MICROSEC * 2);
-        self.set_register(0xF0, 0x55)?;
-        delay.delay_us(INTERMESSAGE_DELAY_MICROSEC * 2);
-        self.set_register(0xFB, 0x00)?;
-        delay.delay_us(INTERMESSAGE_DELAY_MICROSEC * 2);
-        self.update_calibration(delay)?;
-        delay.delay_us(INTERMESSAGE_DELAY_MICROSEC * 2);
-        Ok(())
+        self.interface.init()?;
+        self.update_calibration()
     }
 
-    fn read_id(&mut self) -> Result<ControllerIdReport, Error<E>> {
-        self.set_read_register_address(0xfa)?;
-        let i2c_id = self.read_report()?;
-        Ok(i2c_id)
-    }
-
-    pub fn identify_controller(&mut self) -> Result<Option<ControllerType>, Error<E>> {
-        let i2c_id = self.read_id()?;
-        Ok(crate::common::identify_controller(i2c_id))
-    }
-
-    /// tell the extension controller to prepare a sample by setting the read cursor to 0
-    fn start_sample(&mut self) -> Result<(), Error<E>> {
-        self.set_read_register_address(0x00)?;
-
-        Ok(())
+    pub fn identify_controller(&mut self) -> Result<Option<ControllerType>, Error<ERR>> {
+        self.interface.identify_controller()
     }
 
     /// Read the button/axis data from the nunchuk
-    fn read_nunchuk(&mut self) -> Result<NunchukReading, Error<E>> {
-        let buf = self.read_report()?;
+    fn read_nunchuk(&mut self) -> Result<NunchukReading, Error<ERR>> {
+        let buf = self.interface.read_report()?;
         NunchukReading::from_data(&buf).ok_or(Error::InvalidInputData)
     }
 
-    /// Simple helper with no delay. Should work for testing, not sure if it will function on hardware
-    pub fn read_no_wait(&mut self) -> Result<NunchukReading, Error<E>> {
-        self.start_sample()?;
-        self.read_nunchuk()
-    }
-
-    /// Simple helper with no delay. Should work for testing, not sure if it will function on hardware
-    pub fn read_calibrated_no_wait(&mut self) -> Result<NunchukReadingCalibrated, Error<E>> {
-        Ok(NunchukReadingCalibrated::new(
-            self.read_no_wait()?,
-            &self.calibration,
-        ))
-    }
-
     /// Simple blocking read helper that will start a sample, wait `INTERMESSAGE_DELAY_MICROSEC`, then read the value
-    pub fn read_report_blocking<D: DelayNs>(
-        &mut self,
-        delay: &mut D,
-    ) -> Result<NunchukReading, Error<E>> {
-        delay.delay_us(INTERMESSAGE_DELAY_MICROSEC);
-        self.start_sample()?;
-        delay.delay_us(INTERMESSAGE_DELAY_MICROSEC);
+    pub fn read_report_blocking(&mut self) -> Result<NunchukReading, Error<ERR>> {
+        self.interface.start_sample()?;
         self.read_nunchuk()
     }
 
     /// Do a read, and report axis values relative to calibration
-    pub fn read_blocking<D: DelayNs>(
-        &mut self,
-        delay: &mut D,
-    ) -> Result<NunchukReadingCalibrated, Error<E>> {
+    pub fn read_blocking(&mut self) -> Result<NunchukReadingCalibrated, Error<ERR>> {
         Ok(NunchukReadingCalibrated::new(
-            self.read_report_blocking(delay)?,
+            self.read_report_blocking()?,
             &self.calibration,
         ))
     }
@@ -250,7 +97,11 @@ where
 mod tests {
     use super::*;
     use crate::test_data;
-    use embedded_hal_mock::eh1::i2c::{self, Transaction};
+    use crate::EXT_I2C_ADDR;
+    use embedded_hal_mock::eh1::{
+        delay::NoopDelay,
+        i2c::{self, Transaction},
+    };
     /// There's a certain amount of slop around the center position.
     /// Allow up to this range without it being an error
     const ZERO_SLOP: i8 = 5;
@@ -262,15 +113,23 @@ mod tests {
     #[test]
     fn nunchuck_idle() {
         let expectations = vec![
+            // Reset controller
+            Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+            // Init
+            Transaction::write(EXT_I2C_ADDR as u8, vec![240, 85]),
+            Transaction::write(EXT_I2C_ADDR as u8, vec![251, 0]),
+            // Calibration read
+            Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+            Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_IDLE.to_vec()),
+            // Read
             Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
             Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_IDLE.to_vec()),
         ];
+
         let mut mock = i2c::Mock::new(&expectations);
-        let mut nc = Nunchuk {
-            i2cdev: mock.clone(),
-            calibration: CalibrationData::default(),
-        };
-        let report = nc.read_no_wait().unwrap();
+        let delay = NoopDelay::new();
+        let mut nc = Nunchuk::new(mock.clone(), delay).unwrap();
+        let report = nc.read_blocking().unwrap();
         assert!(!report.button_c);
         assert!(!report.button_z);
         mock.done();
@@ -279,19 +138,22 @@ mod tests {
     #[test]
     fn nunchuck_idle_calibrated() {
         let expectations = vec![
+            // Reset controller
+            Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+            // Init
+            Transaction::write(EXT_I2C_ADDR as u8, vec![240, 85]),
+            Transaction::write(EXT_I2C_ADDR as u8, vec![251, 0]),
+            // Calibration read
+            Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+            Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_IDLE.to_vec()),
+            // Read
             Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
             Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_IDLE.to_vec()),
         ];
         let mut mock = i2c::Mock::new(&expectations);
-        let idle = NunchukReading::from_data(&test_data::NUNCHUCK_IDLE).unwrap();
-        let mut nc = Nunchuk {
-            i2cdev: mock.clone(),
-            calibration: CalibrationData {
-                joystick_x: idle.joystick_x,
-                joystick_y: idle.joystick_y,
-            },
-        };
-        let report = nc.read_calibrated_no_wait().unwrap();
+        let delay = NoopDelay::new();
+        let mut nc = Nunchuk::new(mock.clone(), delay).unwrap();
+        let report = nc.read_blocking().unwrap();
         assert!(!report.button_c);
         assert!(!report.button_z);
         assert_eq!(report.joystick_x, 0);
@@ -302,19 +164,22 @@ mod tests {
     #[test]
     fn nunchuck_left_calibrated() {
         let expectations = vec![
+            // Reset controller
+            Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+            // Init
+            Transaction::write(EXT_I2C_ADDR as u8, vec![240, 85]),
+            Transaction::write(EXT_I2C_ADDR as u8, vec![251, 0]),
+            // Calibration read
+            Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+            Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_IDLE.to_vec()),
+            // Read
             Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
             Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_JOY_L.to_vec()),
         ];
         let mut mock = i2c::Mock::new(&expectations);
-        let idle = NunchukReading::from_data(&test_data::NUNCHUCK_IDLE).unwrap();
-        let mut nc = Nunchuk {
-            i2cdev: mock.clone(),
-            calibration: CalibrationData {
-                joystick_x: idle.joystick_x,
-                joystick_y: idle.joystick_y,
-            },
-        };
-        let report = nc.read_calibrated_no_wait().unwrap();
+        let delay = NoopDelay::new();
+        let mut nc = Nunchuk::new(mock.clone(), delay).unwrap();
+        let report = nc.read_blocking().unwrap();
         assert!(!report.button_c);
         assert!(!report.button_z);
         assert!(report.joystick_x < -AXIS_MAX, "x = {}", report.joystick_x);
@@ -326,19 +191,22 @@ mod tests {
     #[test]
     fn nunchuck_right_calibrated() {
         let expectations = vec![
+            // Reset controller
+            Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+            // Init
+            Transaction::write(EXT_I2C_ADDR as u8, vec![240, 85]),
+            Transaction::write(EXT_I2C_ADDR as u8, vec![251, 0]),
+            // Calibration read
+            Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+            Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_IDLE.to_vec()),
+            // Read
             Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
             Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_JOY_R.to_vec()),
         ];
         let mut mock = i2c::Mock::new(&expectations);
-        let idle = NunchukReading::from_data(&test_data::NUNCHUCK_IDLE).unwrap();
-        let mut nc = Nunchuk {
-            i2cdev: mock.clone(),
-            calibration: CalibrationData {
-                joystick_x: idle.joystick_x,
-                joystick_y: idle.joystick_y,
-            },
-        };
-        let report = nc.read_calibrated_no_wait().unwrap();
+        let delay = NoopDelay::new();
+        let mut nc = Nunchuk::new(mock.clone(), delay).unwrap();
+        let report = nc.read_blocking().unwrap();
         assert!(!report.button_c);
         assert!(!report.button_z);
         assert!(report.joystick_x > AXIS_MAX, "x = {}", report.joystick_x);
@@ -350,19 +218,22 @@ mod tests {
     #[test]
     fn nunchuck_up_calibrated() {
         let expectations = vec![
+            // Reset controller
+            Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+            // Init
+            Transaction::write(EXT_I2C_ADDR as u8, vec![240, 85]),
+            Transaction::write(EXT_I2C_ADDR as u8, vec![251, 0]),
+            // Calibration read
+            Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+            Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_IDLE.to_vec()),
+            // Read
             Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
             Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_JOY_U.to_vec()),
         ];
         let mut mock = i2c::Mock::new(&expectations);
-        let idle = NunchukReading::from_data(&test_data::NUNCHUCK_IDLE).unwrap();
-        let mut nc = Nunchuk {
-            i2cdev: mock.clone(),
-            calibration: CalibrationData {
-                joystick_x: idle.joystick_x,
-                joystick_y: idle.joystick_y,
-            },
-        };
-        let report = nc.read_calibrated_no_wait().unwrap();
+        let delay = NoopDelay::new();
+        let mut nc = Nunchuk::new(mock.clone(), delay).unwrap();
+        let report = nc.read_blocking().unwrap();
         assert!(!report.button_c);
         assert!(!report.button_z);
         assert!(report.joystick_y > AXIS_MAX, "y = {}", report.joystick_y);
@@ -374,19 +245,22 @@ mod tests {
     #[test]
     fn nunchuck_down_calibrated() {
         let expectations = vec![
+            // Reset controller
+            Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+            // Init
+            Transaction::write(EXT_I2C_ADDR as u8, vec![240, 85]),
+            Transaction::write(EXT_I2C_ADDR as u8, vec![251, 0]),
+            // Calibration read
+            Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+            Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_IDLE.to_vec()),
+            // Read
             Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
             Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_JOY_D.to_vec()),
         ];
         let mut mock = i2c::Mock::new(&expectations);
-        let idle = NunchukReading::from_data(&test_data::NUNCHUCK_IDLE).unwrap();
-        let mut nc = Nunchuk {
-            i2cdev: mock.clone(),
-            calibration: CalibrationData {
-                joystick_x: idle.joystick_x,
-                joystick_y: idle.joystick_y,
-            },
-        };
-        let report = nc.read_calibrated_no_wait().unwrap();
+        let delay = NoopDelay::new();
+        let mut nc = Nunchuk::new(mock.clone(), delay).unwrap();
+        let report = nc.read_blocking().unwrap();
         assert!(!report.button_c);
         assert!(!report.button_z);
         assert!(report.joystick_y < -AXIS_MAX, "y = {}", report.joystick_y);
@@ -398,20 +272,28 @@ mod tests {
     #[test]
     fn nunchuck_idle_repeat() {
         let expectations = vec![
+            // Reset controller
+            Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+            // Init
+            Transaction::write(EXT_I2C_ADDR as u8, vec![240, 85]),
+            Transaction::write(EXT_I2C_ADDR as u8, vec![251, 0]),
+            // Calibration read
+            Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+            Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_IDLE.to_vec()),
+            // Read
             Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
             Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_IDLE.to_vec()),
             Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
             Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_IDLE.to_vec()),
         ];
         let mut mock = i2c::Mock::new(&expectations);
-        let mut nc = Nunchuk {
-            i2cdev: mock.clone(),
-            calibration: CalibrationData::default(),
-        };
-        let report = nc.read_no_wait().unwrap();
+        let delay = NoopDelay::new();
+        let mut nc = Nunchuk::new(mock.clone(), delay).unwrap();
+
+        let report = nc.read_report_blocking().unwrap();
         assert!(!report.button_c);
         assert!(!report.button_z);
-        let report = nc.read_no_wait().unwrap();
+        let report = nc.read_report_blocking().unwrap();
         assert!(!report.button_c);
         assert!(!report.button_z);
         mock.done();
@@ -420,15 +302,23 @@ mod tests {
     #[test]
     fn nunchuck_btn_c() {
         let expectations = vec![
+            // Reset controller
+            Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+            // Init
+            Transaction::write(EXT_I2C_ADDR as u8, vec![240, 85]),
+            Transaction::write(EXT_I2C_ADDR as u8, vec![251, 0]),
+            // Calibration read
+            Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+            Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_IDLE.to_vec()),
+            // Read
             Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
             Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_BTN_C.to_vec()),
         ];
         let mut mock = i2c::Mock::new(&expectations);
-        let mut nc = Nunchuk {
-            i2cdev: mock.clone(),
-            calibration: CalibrationData::default(),
-        };
-        let report = nc.read_no_wait().unwrap();
+        let delay = NoopDelay::new();
+        let mut nc = Nunchuk::new(mock.clone(), delay).unwrap();
+
+        let report = nc.read_report_blocking().unwrap();
         assert!(report.button_c);
         assert!(!report.button_z);
         mock.done();
@@ -437,15 +327,23 @@ mod tests {
     #[test]
     fn nunchuck_btn_z() {
         let expectations = vec![
+            // Reset controller
+            Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+            // Init
+            Transaction::write(EXT_I2C_ADDR as u8, vec![240, 85]),
+            Transaction::write(EXT_I2C_ADDR as u8, vec![251, 0]),
+            // Calibration read
+            Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+            Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_IDLE.to_vec()),
+            // Read
             Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
             Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_BTN_Z.to_vec()),
         ];
         let mut mock = i2c::Mock::new(&expectations);
-        let mut nc = Nunchuk {
-            i2cdev: mock.clone(),
-            calibration: CalibrationData::default(),
-        };
-        let report = nc.read_no_wait().unwrap();
+        let delay = NoopDelay::new();
+        let mut nc = Nunchuk::new(mock.clone(), delay).unwrap();
+
+        let report = nc.read_report_blocking().unwrap();
         assert!(!report.button_c);
         assert!(report.button_z);
         mock.done();
