@@ -11,10 +11,10 @@ use panic_probe as _;
 use bsp::hal::{
     self, clocks::init_clocks_and_plls, entry, gpio, pac, sio::Sio, watchdog::Watchdog, Timer,
 };
+use embedded_hal::delay::DelayNs;
 use fugit::RateExtU32;
 use rp_pico as bsp;
 use wii_ext::classic_sync::Classic;
-use embedded_hal::delay::DelayNs;
 
 #[entry]
 fn main() -> ! {
@@ -59,14 +59,14 @@ fn main() -> ! {
     );
 
     // Create, initialise and calibrate the controller
-    let mut controller = Classic::new(i2c, &mut delay).unwrap();
+    let mut controller = Classic::new(i2c, delay).unwrap();
 
     let hi_res = false;
 
     // Enable hi-resolution mode. This also updates calibration
     // Don't really need it for this single stick mode. Plus it might make recovery easier...
     if hi_res {
-        controller.enable_hires(&mut delay).unwrap();
+        controller.enable_hires().unwrap();
     }
 
     // If you have a Nunchuk controller, use this instead.
@@ -76,15 +76,15 @@ fn main() -> ! {
         delay.delay_ms(10);
 
         // Capture the current button and axis values
-        let input = controller.read_blocking(&mut delay);
+        let input = controller.read_blocking();
         if let Ok(input) = input {
             // Print inputs from the controller
             debug!("{:?}", input);
         } else {
             // re-init controller on failure
-            let _ = controller.init(&mut delay);
+            let _ = controller.init();
             if hi_res {
-                let _ = controller.enable_hires(&mut delay);
+                let _ = controller.enable_hires();
             }
         }
     }
