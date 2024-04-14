@@ -44,7 +44,7 @@ pub struct Classic<I2C, DELAY> {
     i2cdev: I2C,
     hires: bool,
     calibration: CalibrationData,
-    delay: DELAY
+    delay: DELAY,
 }
 
 // use crate::nunchuk;
@@ -63,7 +63,7 @@ where
             i2cdev,
             hires: false,
             calibration: CalibrationData::default(),
-            delay: delay
+            delay,
         };
         classic.init()?;
         Ok(classic)
@@ -215,18 +215,14 @@ where
     }
 
     /// Simple blocking read helper that will start a sample, wait 10ms, then read the value
-    pub fn read_report_blocking(
-        &mut self,
-    ) -> Result<ClassicReading, Error<E>> {
+    pub fn read_report_blocking(&mut self) -> Result<ClassicReading, Error<E>> {
         self.start_sample()?;
         self.delay.delay_us(INTERMESSAGE_DELAY_MICROSEC);
         self.read_classic_report()
     }
 
     /// Do a read, and report axis values relative to calibration
-    pub fn read_blocking(
-        &mut self,
-    ) -> Result<ClassicReadingCalibrated, Error<E>> {
+    pub fn read_blocking(&mut self) -> Result<ClassicReadingCalibrated, Error<E>> {
         Ok(ClassicReadingCalibrated::new(
             self.read_report_blocking()?,
             &self.calibration,
