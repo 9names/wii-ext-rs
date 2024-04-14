@@ -123,6 +123,9 @@ mod tests {
             // Init
             Transaction::write(EXT_I2C_ADDR as u8, vec![240, 85]),
             Transaction::write(EXT_I2C_ADDR as u8, vec![251, 0]),
+            // Calibration read
+            Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+            Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_IDLE.to_vec()),
             // Read
             Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
             Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_IDLE.to_vec()),
@@ -279,6 +282,9 @@ mod tests {
             // Init
             Transaction::write(EXT_I2C_ADDR as u8, vec![240, 85]),
             Transaction::write(EXT_I2C_ADDR as u8, vec![251, 0]),
+            // Calibration read
+            Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+            Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_IDLE.to_vec()),
             // Read
             Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
             Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_IDLE.to_vec()),
@@ -306,6 +312,9 @@ mod tests {
             // Init
             Transaction::write(EXT_I2C_ADDR as u8, vec![240, 85]),
             Transaction::write(EXT_I2C_ADDR as u8, vec![251, 0]),
+            // Calibration read
+            Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+            Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_IDLE.to_vec()),
             // Read
             Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
             Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_BTN_C.to_vec()),
@@ -328,6 +337,9 @@ mod tests {
             // Init
             Transaction::write(EXT_I2C_ADDR as u8, vec![240, 85]),
             Transaction::write(EXT_I2C_ADDR as u8, vec![251, 0]),
+            // Calibration read
+            Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
+            Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_IDLE.to_vec()),
             // Read
             Transaction::write(EXT_I2C_ADDR as u8, vec![0]),
             Transaction::read(EXT_I2C_ADDR as u8, test_data::NUNCHUCK_BTN_Z.to_vec()),
