@@ -9,12 +9,7 @@
 
 use crate::core::nunchuk::{CalibrationData, NunchukReading, NunchukReadingCalibrated};
 use crate::interface::Interface;
-use crate::ControllerIdReport;
 use crate::ControllerType;
-use crate::ExtReport;
-use crate::EXT_I2C_ADDR;
-use crate::INTERMESSAGE_DELAY_MICROSEC_U32 as INTERMESSAGE_DELAY_MICROSEC;
-use embedded_hal::delay::DelayNs;
 use embedded_hal::i2c::{I2c, SevenBitAddress};
 
 #[derive(Debug)]
@@ -74,8 +69,7 @@ where
     }
 
     pub fn identify_controller(&mut self) -> Result<Option<ControllerType>, Error<ERR>> {
-        let i2c_id = self.interface.read_id()?;
-        Ok(crate::common::identify_controller(i2c_id))
+        self.interface.identify_controller()
     }
 
     /// Read the button/axis data from the nunchuk
@@ -103,6 +97,7 @@ where
 mod tests {
     use super::*;
     use crate::test_data;
+    use crate::EXT_I2C_ADDR;
     use embedded_hal_mock::eh1::{
         delay::NoopDelay,
         i2c::{self, Transaction},
