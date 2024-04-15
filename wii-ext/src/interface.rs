@@ -1,9 +1,9 @@
-use crate::common::ControllerIdReport;
-use crate::common::ExtHdReport;
-use crate::common::ExtReport;
-use crate::ControllerType;
-use crate::EXT_I2C_ADDR;
-use crate::INTERMESSAGE_DELAY_MICROSEC_U32 as INTERMESSAGE_DELAY_MICROSEC;
+use crate::core::ControllerIdReport;
+use crate::core::ControllerType;
+use crate::core::ExtHdReport;
+use crate::core::ExtReport;
+use crate::core::EXT_I2C_ADDR;
+use crate::core::INTERMESSAGE_DELAY_MICROSEC_U32 as INTERMESSAGE_DELAY_MICROSEC;
 use embedded_hal::i2c::I2c;
 use embedded_hal::i2c::SevenBitAddress;
 
@@ -60,7 +60,7 @@ where
 
     pub(super) fn identify_controller(&mut self) -> Result<Option<ControllerType>, Error<E>> {
         let i2c_id = self.read_id()?;
-        Ok(crate::common::identify_controller(i2c_id))
+        Ok(crate::core::identify_controller(i2c_id))
     }
 
     /// tell the extension controller to prepare a sample by setting the read cursor to 0

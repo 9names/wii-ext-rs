@@ -2,7 +2,8 @@ use embedded_hal_mock::eh1::{
     delay::NoopDelay,
     i2c::{self, Transaction},
 };
-use wii_ext::{nunchuk::Nunchuk, EXT_I2C_ADDR};
+use wii_ext::core::EXT_I2C_ADDR;
+use wii_ext::nunchuk::Nunchuk;
 mod common;
 use common::test_data;
 

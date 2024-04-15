@@ -10,12 +10,12 @@
 //
 // See `decode_classic_report` and `decode_classic_hd_report` for data format
 
-use crate::ControllerIdReport;
-use crate::ControllerType;
-use crate::ExtHdReport;
-use crate::ExtReport;
-use crate::EXT_I2C_ADDR;
-use crate::INTERMESSAGE_DELAY_MICROSEC_U32;
+use crate::core::ControllerIdReport;
+use crate::core::ControllerType;
+use crate::core::ExtHdReport;
+use crate::core::ExtReport;
+use crate::core::EXT_I2C_ADDR;
+use crate::core::INTERMESSAGE_DELAY_MICROSEC_U32;
 use embedded_hal_async;
 
 #[cfg(feature = "defmt_print")]
@@ -166,7 +166,7 @@ where
         &mut self,
     ) -> Result<Option<ControllerType>, ClassicAsyncError> {
         let i2c_id = self.read_id().await?;
-        Ok(crate::common::identify_controller(i2c_id))
+        Ok(crate::core::identify_controller(i2c_id))
     }
 
     /// tell the extension controller to prepare a sample by setting the read cursor to 0

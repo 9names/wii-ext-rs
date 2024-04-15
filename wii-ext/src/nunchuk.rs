@@ -8,8 +8,8 @@
 // work out if it's worth supporting that
 
 use crate::core::nunchuk::{CalibrationData, NunchukReading, NunchukReadingCalibrated};
+use crate::core::ControllerType;
 use crate::interface::Interface;
-use crate::ControllerType;
 use embedded_hal::i2c::{I2c, SevenBitAddress};
 
 #[derive(Debug)]

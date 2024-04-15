@@ -11,8 +11,8 @@
 // See `decode_classic_report` and `decode_classic_hd_report` for data format
 
 use crate::core::classic::*;
+use crate::core::ControllerType;
 use crate::interface::Interface;
-use crate::ControllerType;
 use embedded_hal::i2c::I2c;
 
 #[cfg(feature = "defmt_print")]
