@@ -10,14 +10,10 @@
 //
 // See `decode_classic_report` and `decode_classic_hd_report` for data format
 
+use crate::async_impl::interface::{ClassicAsyncError, InterfaceAsync};
 use crate::core::classic::*;
 use crate::core::{ControllerIdReport, ControllerType};
-use crate::interface_async::InterfaceAsync;
 use embedded_hal_async;
-
-// use core::future::Future;
-
-use crate::interface_async::ClassicAsyncError;
 
 pub struct ClassicAsync<I2C, Delay> {
     interface: InterfaceAsync<I2C, Delay>,
@@ -25,7 +21,6 @@ pub struct ClassicAsync<I2C, Delay> {
     calibration: CalibrationData,
 }
 
-// use crate::nunchuk;
 impl<I2C, Delay> ClassicAsync<I2C, Delay>
 where
     I2C: embedded_hal_async::i2c::I2c,
