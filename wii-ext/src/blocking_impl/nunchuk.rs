@@ -7,7 +7,7 @@
 // TODO: nunchuk technically supports HD report, but the last two bytes will be zeroes
 // work out if it's worth supporting that
 
-use crate::blocking_impl::interface::{Error, Interface};
+use crate::blocking_impl::interface::{BlockingImplError, Interface};
 use crate::core::nunchuk::{CalibrationData, NunchukReading, NunchukReadingCalibrated};
 use crate::core::ControllerType;
 use embedded_hal::i2c::{I2c, SevenBitAddress};
@@ -33,7 +33,7 @@ where
     /// This method will open the provide i2c device file and will
     /// send the required init sequence in order to read data in
     /// the future.
-    pub fn new(i2cdev: I2C, delay: DELAY) -> Result<Nunchuk<I2C, DELAY>, Error<ERR>> {
+    pub fn new(i2cdev: I2C, delay: DELAY) -> Result<Nunchuk<I2C, DELAY>, BlockingImplError<ERR>> {
         let interface = Interface::new(i2cdev, delay);
         let mut nunchuk = Nunchuk {
             interface,
@@ -47,7 +47,7 @@ where
     ///
     /// Since each device will have different tolerances, we take a snapshot of some analog data
     /// to use as the "baseline" center.
-    pub fn update_calibration(&mut self) -> Result<(), Error<ERR>> {
+    pub fn update_calibration(&mut self) -> Result<(), BlockingImplError<ERR>> {
         let data = self.read_report_blocking()?;
 
         self.calibration = CalibrationData {
@@ -58,7 +58,7 @@ where
     }
 
     /// Send the init sequence to the Wii extension controller
-    pub fn init(&mut self) -> Result<(), Error<ERR>> {
+    pub fn init(&mut self) -> Result<(), BlockingImplError<ERR>> {
         // These registers must be written to disable encryption.; the documentation is a bit
         // lacking but it appears this is some kind of handshake to
         // perform unencrypted data tranfers
@@ -66,24 +66,24 @@ where
         self.update_calibration()
     }
 
-    pub fn identify_controller(&mut self) -> Result<Option<ControllerType>, Error<ERR>> {
+    pub fn identify_controller(&mut self) -> Result<Option<ControllerType>, BlockingImplError<ERR>> {
         self.interface.identify_controller()
     }
 
     /// Read the button/axis data from the nunchuk
-    fn read_nunchuk(&mut self) -> Result<NunchukReading, Error<ERR>> {
+    fn read_nunchuk(&mut self) -> Result<NunchukReading, BlockingImplError<ERR>> {
         let buf = self.interface.read_report()?;
-        NunchukReading::from_data(&buf).ok_or(Error::InvalidInputData)
+        NunchukReading::from_data(&buf).ok_or(BlockingImplError::InvalidInputData)
     }
 
     /// Simple blocking read helper that will start a sample, wait `INTERMESSAGE_DELAY_MICROSEC`, then read the value
-    pub fn read_report_blocking(&mut self) -> Result<NunchukReading, Error<ERR>> {
+    pub fn read_report_blocking(&mut self) -> Result<NunchukReading, BlockingImplError<ERR>> {
         self.interface.start_sample()?;
         self.read_nunchuk()
     }
 
     /// Do a read, and report axis values relative to calibration
-    pub fn read_blocking(&mut self) -> Result<NunchukReadingCalibrated, Error<ERR>> {
+    pub fn read_blocking(&mut self) -> Result<NunchukReadingCalibrated, BlockingImplError<ERR>> {
         Ok(NunchukReadingCalibrated::new(
             self.read_report_blocking()?,
             &self.calibration,
