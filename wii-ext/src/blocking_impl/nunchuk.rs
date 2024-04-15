@@ -18,7 +18,6 @@ pub enum NunchukError<E> {
     ParseError,
 }
 
-
 pub struct Nunchuk<I2C, DELAY> {
     interface: Interface<I2C, DELAY>,
     calibration: CalibrationData,

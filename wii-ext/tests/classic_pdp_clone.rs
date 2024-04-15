@@ -1,7 +1,7 @@
 use embedded_hal_mock::eh1::delay::NoopDelay;
 use embedded_hal_mock::eh1::i2c::{self, Transaction};
 use paste::paste;
-use wii_ext::classic_sync::*;
+use wii_ext::blocking_impl::classic::Classic;
 use wii_ext::core::classic::ClassicReading;
 use wii_ext::core::EXT_I2C_ADDR;
 mod common;
