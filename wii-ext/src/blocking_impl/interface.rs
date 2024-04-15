@@ -84,10 +84,7 @@ where
     /// increments the register read postion on each read operation, and also on
     /// every write operation.
     /// This should be called before a read operation to ensure you get the correct data
-    pub(super) fn set_read_register_address(
-        &mut self,
-        byte0: u8,
-    ) -> Result<(), BlockingImplError<E>> {
+    pub(super) fn set_read_register_address(&mut self, byte0: u8) -> Result<(), BlockingImplError<E>> {
         self.i2cdev
             .write(EXT_I2C_ADDR as u8, &[byte0])
             .map_err(BlockingImplError::I2C)
