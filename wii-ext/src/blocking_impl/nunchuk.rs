@@ -66,7 +66,9 @@ where
         self.update_calibration()
     }
 
-    pub fn identify_controller(&mut self) -> Result<Option<ControllerType>, BlockingImplError<ERR>> {
+    pub fn identify_controller(
+        &mut self,
+    ) -> Result<Option<ControllerType>, BlockingImplError<ERR>> {
         self.interface.identify_controller()
     }
 
