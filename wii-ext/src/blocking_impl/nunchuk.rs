@@ -7,9 +7,9 @@
 // TODO: nunchuk technically supports HD report, but the last two bytes will be zeroes
 // work out if it's worth supporting that
 
+use crate::blocking_impl::interface::{Error, Interface};
 use crate::core::nunchuk::{CalibrationData, NunchukReading, NunchukReadingCalibrated};
 use crate::core::ControllerType;
-use crate::interface::Interface;
 use embedded_hal::i2c::{I2c, SevenBitAddress};
 
 #[derive(Debug)]
@@ -17,8 +17,6 @@ pub enum NunchukError<E> {
     Error(E),
     ParseError,
 }
-
-use crate::interface::Error;
 
 pub struct Nunchuk<I2C, DELAY> {
     interface: Interface<I2C, DELAY>,

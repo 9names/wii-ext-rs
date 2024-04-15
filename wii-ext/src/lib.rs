@@ -1,17 +1,9 @@
 #![cfg_attr(not(test), no_std)]
 
-/// Blocking I2C impl
-pub mod classic_sync;
+/// Async I2C implementations
+pub mod async_impl;
 
-// Async I2C impl
-pub mod classic_async;
-
+/// Blocking I2C implementations
+pub mod blocking_impl;
 /// Types + data decoding
 pub mod core;
-
-/// i2c interface code
-pub mod interface;
-/// async i2c interface code
-pub mod interface_async;
-
-pub mod nunchuk;

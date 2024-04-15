@@ -10,9 +10,9 @@
 //
 // See `decode_classic_report` and `decode_classic_hd_report` for data format
 
-use crate::core::classic::*;
+use crate::blocking_impl::interface::{Error, Interface};
+use crate::core::classic::{CalibrationData, ClassicReading, ClassicReadingCalibrated};
 use crate::core::ControllerType;
-use crate::interface::Interface;
 use embedded_hal::i2c::I2c;
 
 #[cfg(feature = "defmt_print")]
@@ -25,8 +25,6 @@ pub enum ClassicError<E> {
     Error(E),
     ParseError,
 }
-
-use crate::interface::Error;
 
 pub struct Classic<I2C, DELAY> {
     interface: Interface<I2C, DELAY>,

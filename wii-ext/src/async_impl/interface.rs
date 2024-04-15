@@ -10,12 +10,10 @@
 //
 // See `decode_classic_report` and `decode_classic_hd_report` for data format
 
-use crate::core::ControllerIdReport;
-use crate::core::ControllerType;
-use crate::core::ExtHdReport;
-use crate::core::ExtReport;
-use crate::core::EXT_I2C_ADDR;
-use crate::core::INTERMESSAGE_DELAY_MICROSEC_U32;
+use crate::core::{
+    ControllerIdReport, ControllerType, ExtHdReport, ExtReport, EXT_I2C_ADDR,
+    INTERMESSAGE_DELAY_MICROSEC_U32,
+};
 use embedded_hal_async;
 
 #[cfg(feature = "defmt_print")]

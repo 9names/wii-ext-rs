@@ -1,11 +1,8 @@
-use crate::core::ControllerIdReport;
-use crate::core::ControllerType;
-use crate::core::ExtHdReport;
-use crate::core::ExtReport;
-use crate::core::EXT_I2C_ADDR;
-use crate::core::INTERMESSAGE_DELAY_MICROSEC_U32 as INTERMESSAGE_DELAY_MICROSEC;
-use embedded_hal::i2c::I2c;
-use embedded_hal::i2c::SevenBitAddress;
+use crate::core::{
+    ControllerIdReport, ControllerType, ExtHdReport, ExtReport, EXT_I2C_ADDR,
+    INTERMESSAGE_DELAY_MICROSEC_U32 as INTERMESSAGE_DELAY_MICROSEC,
+};
+use embedded_hal::i2c::{I2c, SevenBitAddress};
 
 pub struct Interface<I2C, Delay> {
     i2cdev: I2C,
