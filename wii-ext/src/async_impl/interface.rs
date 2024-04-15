@@ -132,11 +132,7 @@ where
     }
 
     /// Set a single register at target address
-    pub(super) async fn set_register(
-        &mut self,
-        addr: u8,
-        byte1: u8,
-    ) -> Result<(), AsyncImplError> {
+    pub(super) async fn set_register(&mut self, addr: u8, byte1: u8) -> Result<(), AsyncImplError> {
         self.i2cdev
             .write(EXT_I2C_ADDR as u8, &[addr, byte1])
             .await

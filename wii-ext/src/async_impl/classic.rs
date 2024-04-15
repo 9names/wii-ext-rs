@@ -104,9 +104,7 @@ where
         self.interface.read_id().await
     }
 
-    pub async fn identify_controller(
-        &mut self,
-    ) -> Result<Option<ControllerType>, AsyncImplError> {
+    pub async fn identify_controller(&mut self) -> Result<Option<ControllerType>, AsyncImplError> {
         self.interface.identify_controller().await
     }
 }
