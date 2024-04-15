@@ -2,10 +2,11 @@ use embedded_hal_mock::eh1::delay::NoopDelay;
 use embedded_hal_mock::eh1::i2c::{self, Transaction};
 use paste::paste;
 use wii_ext::classic_sync::*;
-use wii_ext::common::*;
 use wii_ext::core::classic::ClassicReading;
-use wii_ext::test_data::*;
-use wii_ext::*;
+use wii_ext::core::EXT_I2C_ADDR;
+mod common;
+use common::test_data;
+use common::test_data::*;
 
 /// There's a certain amount of slop around the center position.
 /// Allow up to this range without it being an error

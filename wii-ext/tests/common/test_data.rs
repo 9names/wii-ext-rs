@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
-use crate::ExtHdReport;
-use crate::ExtReport;
+use wii_ext::core::ExtHdReport;
+use wii_ext::core::ExtReport;
 // Test data with each peripheral in certain states
 // ID is the identification data from address
 // CLASSIC_HIRES_DEFAULT is the value of the hi-res mode register *before* setting it

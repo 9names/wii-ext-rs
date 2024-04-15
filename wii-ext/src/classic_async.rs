@@ -11,8 +11,8 @@
 // See `decode_classic_report` and `decode_classic_hd_report` for data format
 
 use crate::core::classic::*;
+use crate::core::{ControllerIdReport, ControllerType};
 use crate::interface_async::InterfaceAsync;
-use crate::{ControllerIdReport, ControllerType};
 use embedded_hal_async;
 
 // use core::future::Future;
