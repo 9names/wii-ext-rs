@@ -6,7 +6,7 @@
 
 // Nunchuk technically supports HD report, but the last two bytes will be zeroes
 // There's no benefit, so we're leaving that unimplemented
-use crate::async_impl::interface::{ClassicAsyncError as AsyncImplError, InterfaceAsync};
+use crate::async_impl::interface::{AsyncImplError, InterfaceAsync};
 use crate::core::nunchuk::*;
 use crate::core::{ControllerIdReport, ControllerType};
 use embedded_hal_async;

@@ -10,7 +10,7 @@
 //
 // See `decode_classic_report` and `decode_classic_hd_report` for data format
 
-use crate::async_impl::interface::{ClassicAsyncError, InterfaceAsync};
+use crate::async_impl::interface::{AsyncImplError, InterfaceAsync};
 use crate::core::classic::*;
 use crate::core::{ControllerIdReport, ControllerType};
 use embedded_hal_async;
@@ -44,7 +44,7 @@ where
     // /
     // / Since each device will have different tolerances, we take a snapshot of some analog data
     // / to use as the "baseline" center.
-    pub async fn update_calibration(&mut self) -> Result<(), ClassicAsyncError> {
+    pub async fn update_calibration(&mut self) -> Result<(), AsyncImplError> {
         let data = self.read_report().await?;
         self.calibration = CalibrationData {
             joystick_left_x: data.joystick_left_x,
@@ -60,7 +60,7 @@ where
     /// Send the init sequence to the Wii extension controller
     ///
     /// This could be a bit faster with DelayUs, but since you only init once we'll re-use delay_ms
-    pub async fn init(&mut self) -> Result<(), ClassicAsyncError> {
+    pub async fn init(&mut self) -> Result<(), AsyncImplError> {
         // Extension controllers by default will use encrypted communication, as that is what the Wii does.
         // We can disable this encryption by writing some magic values
         // This is described at https://wiibrew.org/wiki/Wiimote/Extension_Controllers#The_New_Way
@@ -73,40 +73,40 @@ where
     }
 
     /// poll the controller for the latest data
-    async fn read_classic_report(&mut self) -> Result<ClassicReading, ClassicAsyncError> {
+    async fn read_classic_report(&mut self) -> Result<ClassicReading, AsyncImplError> {
         if self.hires {
             let buf = self.interface.read_hd_report().await?;
-            ClassicReading::from_data(&buf).ok_or(ClassicAsyncError::InvalidInputData)
+            ClassicReading::from_data(&buf).ok_or(AsyncImplError::InvalidInputData)
         } else {
             let buf = self.interface.read_ext_report().await?;
-            ClassicReading::from_data(&buf).ok_or(ClassicAsyncError::InvalidInputData)
+            ClassicReading::from_data(&buf).ok_or(AsyncImplError::InvalidInputData)
         }
     }
 
     /// Simple blocking read helper that will start a sample, wait 10ms, then read the value
-    async fn read_report(&mut self) -> Result<ClassicReading, ClassicAsyncError> {
+    async fn read_report(&mut self) -> Result<ClassicReading, AsyncImplError> {
         self.read_classic_report().await
     }
 
     /// Do a read, and report axis values relative to calibration
-    pub async fn read(&mut self) -> Result<ClassicReadingCalibrated, ClassicAsyncError> {
+    pub async fn read(&mut self) -> Result<ClassicReadingCalibrated, AsyncImplError> {
         Ok(ClassicReadingCalibrated::new(
             self.read_classic_report().await?,
             &self.calibration,
         ))
     }
 
-    pub async fn enable_hires(&mut self) -> Result<(), ClassicAsyncError> {
+    pub async fn enable_hires(&mut self) -> Result<(), AsyncImplError> {
         self.interface.enable_hires().await
     }
 
-    pub async fn read_id(&mut self) -> Result<ControllerIdReport, ClassicAsyncError> {
+    pub async fn read_id(&mut self) -> Result<ControllerIdReport, AsyncImplError> {
         self.interface.read_id().await
     }
 
     pub async fn identify_controller(
         &mut self,
-    ) -> Result<Option<ControllerType>, ClassicAsyncError> {
+    ) -> Result<Option<ControllerType>, AsyncImplError> {
         self.interface.identify_controller().await
     }
 }
