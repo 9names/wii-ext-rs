@@ -63,20 +63,15 @@ where
     }
 
     /// poll the controller for the latest data
-    async fn read_classic_report(&mut self) -> Result<NunchukReading, AsyncImplError> {
+    async fn read_report(&mut self) -> Result<NunchukReading, AsyncImplError> {
         let buf = self.interface.read_ext_report().await?;
         NunchukReading::from_data(&buf).ok_or(AsyncImplError::InvalidInputData)
-    }
-
-    /// Simple blocking read helper that will start a sample, wait 10ms, then read the value
-    async fn read_report(&mut self) -> Result<NunchukReading, AsyncImplError> {
-        self.read_classic_report().await
     }
 
     /// Do a read, and report axis values relative to calibration
     pub async fn read(&mut self) -> Result<NunchukReadingCalibrated, AsyncImplError> {
         Ok(NunchukReadingCalibrated::new(
-            self.read_classic_report().await?,
+            self.read_report().await?,
             &self.calibration,
         ))
     }
