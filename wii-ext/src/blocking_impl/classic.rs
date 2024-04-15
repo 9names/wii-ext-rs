@@ -10,7 +10,7 @@
 //
 // See `decode_classic_report` and `decode_classic_hd_report` for data format
 
-use crate::blocking_impl::interface::{Error, Interface};
+use crate::blocking_impl::interface::{BlockingImplError, Interface};
 use crate::core::classic::{CalibrationData, ClassicReading, ClassicReadingCalibrated};
 use crate::core::ControllerType;
 use embedded_hal::i2c::I2c;
@@ -42,7 +42,7 @@ where
     /// This method will open the provide i2c device file and will
     /// send the required init sequence in order to read data in
     /// the future.
-    pub fn new(i2cdev: T, delay: DELAY) -> Result<Classic<T, DELAY>, Error<E>> {
+    pub fn new(i2cdev: T, delay: DELAY) -> Result<Classic<T, DELAY>, BlockingImplError<E>> {
         let interface = Interface::new(i2cdev, delay);
         let mut classic = Classic {
             interface,
@@ -57,7 +57,7 @@ where
     ///
     /// Since each device will have different tolerances, we take a snapshot of some analog data
     /// to use as the "baseline" center.
-    pub fn update_calibration(&mut self) -> Result<(), Error<E>> {
+    pub fn update_calibration(&mut self) -> Result<(), BlockingImplError<E>> {
         let data = self.read_report_blocking()?;
 
         self.calibration = CalibrationData {
@@ -74,7 +74,7 @@ where
     /// Send the init sequence to the Wii extension controller
     ///
     /// This could be a bit faster with DelayNs, but since you only init once we'll re-use delay_ms
-    pub fn init(&mut self) -> Result<(), Error<E>> {
+    pub fn init(&mut self) -> Result<(), BlockingImplError<E>> {
         // Extension controllers by default will use encrypted communication, as that is what the Wii does.
         // We can disable this encryption by writing some magic values
         // This is described at https://wiibrew.org/wiki/Wiimote/Extension_Controllers#The_New_Way
@@ -92,7 +92,7 @@ where
     /// This enables the controllers high-resolution report data mode, which returns each
     /// analogue axis as a u8, rather than packing smaller integers in a structure.
     /// If your controllers supports this mode, you should use it. It is much better.
-    pub fn enable_hires(&mut self) -> Result<(), Error<E>> {
+    pub fn enable_hires(&mut self) -> Result<(), BlockingImplError<E>> {
         self.interface.enable_hires()?;
         self.hires = true;
         self.update_calibration()?;
@@ -108,42 +108,42 @@ where
     /// This function does not work.
     /// TODO: work out why, make it public when it works
     #[allow(dead_code)]
-    fn disable_hires(&mut self) -> Result<(), Error<E>> {
+    fn disable_hires(&mut self) -> Result<(), BlockingImplError<E>> {
         self.interface.disable_hires()?;
         self.hires = false;
         self.update_calibration()?;
         Ok(())
     }
 
-    pub fn identify_controller(&mut self) -> Result<Option<ControllerType>, Error<E>> {
+    pub fn identify_controller(&mut self) -> Result<Option<ControllerType>, BlockingImplError<E>> {
         self.interface.identify_controller()
     }
 
     /// poll the controller for the latest data
-    fn read_classic_report(&mut self) -> Result<ClassicReading, Error<E>> {
+    fn read_classic_report(&mut self) -> Result<ClassicReading, BlockingImplError<E>> {
         if self.hires {
             let buf = self.interface.read_hd_report()?;
-            ClassicReading::from_data(&buf).ok_or(Error::InvalidInputData)
+            ClassicReading::from_data(&buf).ok_or(BlockingImplError::InvalidInputData)
         } else {
             let buf = self.interface.read_report()?;
-            ClassicReading::from_data(&buf).ok_or(Error::InvalidInputData)
+            ClassicReading::from_data(&buf).ok_or(BlockingImplError::InvalidInputData)
         }
     }
 
     /// Simple read helper helper with no delay. Works for testing, not on real hardware
-    pub fn read_classic_no_wait(&mut self) -> Result<ClassicReading, Error<E>> {
+    pub fn read_classic_no_wait(&mut self) -> Result<ClassicReading, BlockingImplError<E>> {
         self.interface.start_sample()?;
         self.read_classic_report()
     }
 
     /// Simple blocking read helper that will start a sample, wait 10ms, then read the value
-    pub fn read_report_blocking(&mut self) -> Result<ClassicReading, Error<E>> {
+    pub fn read_report_blocking(&mut self) -> Result<ClassicReading, BlockingImplError<E>> {
         self.interface.start_sample_and_wait()?;
         self.read_classic_report()
     }
 
     /// Do a read, and report axis values relative to calibration
-    pub fn read_blocking(&mut self) -> Result<ClassicReadingCalibrated, Error<E>> {
+    pub fn read_blocking(&mut self) -> Result<ClassicReadingCalibrated, BlockingImplError<E>> {
         Ok(ClassicReadingCalibrated::new(
             self.read_report_blocking()?,
             &self.calibration,
