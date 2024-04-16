@@ -43,6 +43,11 @@ where
         Ok(nunchuk)
     }
 
+    /// Recover data members
+    pub fn destroy(self) -> (I2C, DELAY) {
+        self.interface.destroy()
+    }
+
     /// Update the stored calibration for this controller
     ///
     /// Since each device will have different tolerances, we take a snapshot of some analog data
@@ -91,4 +96,5 @@ where
             &self.calibration,
         ))
     }
+
 }

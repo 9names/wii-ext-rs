@@ -28,6 +28,11 @@ where
         Interface { i2cdev, delay }
     }
 
+    /// Recover data members
+    pub fn destroy(self) -> (I2C, Delay) {
+        (self.i2cdev, self.delay)
+    }
+
     /// Send the init sequence to the Wii extension controller
     pub(super) fn init(&mut self) -> Result<(), BlockingImplError<E>> {
         // Extension controllers by default will use encrypted communication, as that is what the Wii does.
@@ -130,4 +135,5 @@ where
             .map_err(BlockingImplError::I2C)
             .and(Ok(buffer))
     }
+
 }

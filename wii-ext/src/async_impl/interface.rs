@@ -48,6 +48,11 @@ where
         Self { i2cdev, delay }
     }
 
+    /// Recover data members
+    pub fn destroy(self) -> (I2C, Delay) {
+        (self.i2cdev, self.delay)
+    }
+
     pub(super) async fn delay_us(&mut self, micros: u32) {
         self.delay.delay_us(micros).await
     }
