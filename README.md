@@ -22,13 +22,15 @@ Wii Motion Plus support is planned, both in standalone and combo mode
 
 ## Usage
 
-To use this driver, import this crate and an `embedded_hal` implementation,
+To use this driver, import this crate and an `embedded_hal`/`embedded_hal_async` implementation,
 then instantiate the appropriate device.
 
 ```rust
 use ::I2C; // insert an include for your HAL i2c peripheral name here
-use wii_ext::classic_sync::Classic; // use the synchronous/blocking driver
-// use wii_ext::classic_sync::Classic; // use the synchronous/blocking driver
+// use the synchronous/blocking driver
+use wii_ext::blocking_impl::classic::Classic;
+// use the asynchronous driver
+// use wii_ext::async_impl::classic::Classic;
 
 fn main() {
     let i2c = I2C::new(); // insert your HAL i2c init here
