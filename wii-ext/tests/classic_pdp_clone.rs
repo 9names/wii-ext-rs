@@ -54,7 +54,7 @@ fn classic_idle() {
     let mut i2c = i2c::Mock::new(&expectations);
     let delay = NoopDelay::new();
     let mut classic = Classic::new(i2c.clone(), delay).unwrap();
-    let report = classic.read_report().unwrap();
+    let report = classic.read_uncalibrated().unwrap();
     assert_digital_eq(report, ClassicReading::default());
     i2c.done();
 }
@@ -102,7 +102,7 @@ macro_rules! assert_button_fn {
                 let mut i2c = i2c::Mock::new(&expectations);
                 let delay = NoopDelay::new();
                 let mut classic = Classic::new(i2c.clone(), delay).unwrap();
-                let input = classic.read_report_blocking().unwrap();
+                let input = classic.read_uncalibrated().unwrap();
                 assert_digital_eq(input, ClassicReading {
                     $x: true,
                     ..Default::default()
@@ -149,7 +149,7 @@ fn classic_calibrated_idle() {
     let mut i2c = i2c::Mock::new(&expectations);
     let delay = NoopDelay::new();
     let mut classic = Classic::new(i2c.clone(), delay).unwrap();
-    let input = classic.read_blocking().unwrap();
+    let input = classic.read().unwrap();
     assert_eq!(input.joystick_left_x, 0);
     assert_eq!(input.joystick_left_y, 0);
     assert_eq!(input.joystick_right_x, 0);
@@ -176,7 +176,7 @@ fn classic_calibrated_joy_left() {
     let mut i2c = i2c::Mock::new(&expectations);
     let delay = NoopDelay::new();
     let mut classic = Classic::new(i2c.clone(), delay).unwrap();
-    let input = classic.read_blocking().unwrap();
+    let input = classic.read().unwrap();
 
     assert!(
         (i8::MIN..-AXIS_MAX).contains(&input.joystick_left_x),
@@ -239,7 +239,7 @@ macro_rules! assert_joysticks {
                 let mut i2c = i2c::Mock::new(&expectations);
                 let delay = NoopDelay::new();
                 let mut classic = Classic::new(i2c.clone(), delay).unwrap();
-                let input = classic.read_blocking().unwrap();
+                let input = classic.read().unwrap();
 
                 assert!(
                     ($lxl..=$lxh).contains(&input.joystick_left_x),
