@@ -14,7 +14,7 @@ use bsp::hal::{
 use embedded_hal::delay::DelayNs;
 use fugit::RateExtU32;
 use rp_pico as bsp;
-use wii_ext::classic_sync::Classic;
+use wii_ext::blocking_impl::classic::Classic;
 
 #[entry]
 fn main() -> ! {
@@ -76,7 +76,7 @@ fn main() -> ! {
         delay.delay_ms(10);
 
         // Capture the current button and axis values
-        let input = controller.read_blocking();
+        let input = controller.read();
         if let Ok(input) = input {
             // Print inputs from the controller
             debug!("{:?}", input);

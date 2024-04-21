@@ -4,7 +4,7 @@
 use defmt::*;
 use embassy_rp::gpio;
 use gpio::{Level, Output};
-use wii_ext::classic_async;
+use wii_ext::async_impl::classic::Classic;
 use {defmt_rtt as _, panic_probe as _};
 
 use embassy_executor::Spawner;
@@ -43,7 +43,7 @@ async fn main(spawner: Spawner) {
 
     // Create, initialise and calibrate the controller
     info!("initialising controller");
-    let mut controller = classic_async::ClassicAsync::new(i2c, Delay);
+    let mut controller = Classic::new(i2c, Delay);
     controller.init().await.unwrap();
 
     let hi_res = false;
