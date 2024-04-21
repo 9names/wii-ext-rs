@@ -52,7 +52,7 @@ fn classic_idle() {
     let mut i2c = i2c::Mock::new(&expectations);
     let delay = NoopDelay::new();
     let mut classic = Classic::new(i2c.clone(), delay).unwrap();
-    let report = classic.read_report_blocking().unwrap();
+    let report = classic.read_report().unwrap();
     assert_digital_eq(report, ClassicReading::default());
     i2c.done();
 }
