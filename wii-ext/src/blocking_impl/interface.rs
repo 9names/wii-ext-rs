@@ -133,5 +133,4 @@ where
             .map_err(BlockingImplError::I2C)
             .and(Ok(buffer))
     }
-
 }

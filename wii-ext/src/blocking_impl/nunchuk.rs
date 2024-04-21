@@ -76,5 +76,4 @@ where
             &self.calibration,
         ))
     }
-
 }
