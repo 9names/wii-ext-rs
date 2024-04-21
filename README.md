@@ -1,6 +1,6 @@
 # Rust Wiimote Extension-Controller (Nunchuk/classic controller) Driver
 
-This is a platform agnostic Rust driver for Wiimote Extension controllers (Nunchuk, Classic, Classic Pro, NES Classic, SNES Classic, and clones) using the [`embedded-hal`] traits.
+This is a platform agnostic Rust driver for Wiimote Extension controllers (Nunchuk, Classic, Classic Pro, NES Classic, SNES Classic, and clones) using the [`embedded-hal`] and [`embedded-hal-async`] traits.
 
 This driver allows you to read all axes and buttons for Wiimote Extension controllers
 
@@ -26,24 +26,25 @@ To use this driver, import this crate and an `embedded_hal` implementation,
 then instantiate the appropriate device.
 
 ```rust
-use wii_ext::classic::Classic;
 use ::I2C; // insert an include for your HAL i2c peripheral name here
+use wii_ext::classic_sync::Classic; // use the synchronous/blocking driver
+// use wii_ext::classic_sync::Classic; // use the synchronous/blocking driver
 
 fn main() {
     let i2c = I2C::new(); // insert your HAL i2c init here
     let mut delay = cortex_m::delay::Delay::new(); // some delay source as well
     // Create, initialise and calibrate the controller
     // You could use Nunchuk::new() instead of Classic::new() here
-    let mut controller = Classic::new(i2c, &mut delay).unwrap();
+    let mut controller = Classic::new(i2c, delay).unwrap();
     // Enable hi-resolution mode. This also updates calibration
     // Only supported for Classic controllers
-    controller.enable_hires(&mut delay).unwrap();
+    controller.enable_hires().unwrap();
     loop {
         // read_blocking returns calibrated data: joysticks and
         // triggers will return signed integers, relative to calibration
         // position. Eg: center is (0,0), left is (-90,0) in standard resolution
         // or (-126,0) in HD, etc
-        let input = controller.read_blocking(&mut delay).unwrap();
+        let input = controller.read().unwrap();
         // You can read individual buttons...
         let a = input.button_a;
         let b = input.button_b;
@@ -54,7 +55,7 @@ fn main() {
         // if you enable features=["defmt_print"]
         info!("{:?}", input);
         // Calibration can be manually performed as needed
-        controller.update_calibration(&mut delay).unwrap();
+        controller.update_calibration().unwrap();
     }
 }
 ```
@@ -63,7 +64,7 @@ fn main() {
 
 - Nunchuk is supported
 - Classic controllers supported in regular and HD mode
-- Controller init is not 100% reliable, can suffer from i2c errors.
+- Controller init is not 100% reliable, can suffer from i2c errors. This seems to affect the blocking implementation more than async
   Error handling around new() is strongly recommended.
 
 ## Support
@@ -92,4 +93,5 @@ Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in the work by you, as defined in the Apache-2.0 license, shall
 be dual licensed as above, without any additional terms or conditions.
 
-[`embedded-hal`]: https://github.com/rust-embedded/embedded-hal
+[`embedded-hal`]: https://crates.io/crates/embedded-hal
+[`embedded-hal-async`]: https://crates.io/crates/embedded-hal-async
