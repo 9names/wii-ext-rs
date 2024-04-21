@@ -4,7 +4,7 @@
 use defmt::*;
 use embassy_rp::gpio;
 use gpio::{Level, Output};
-use wii_ext::async_impl::nunchuk;
+use wii_ext::async_impl::nunchuk::Nunchuk;
 use {defmt_rtt as _, panic_probe as _};
 
 use embassy_executor::Spawner;
@@ -15,7 +15,6 @@ use embassy_rp::peripherals::I2C0;
 use embassy_sync::blocking_mutex::raw::ThreadModeRawMutex;
 use embassy_sync::mutex::Mutex;
 use embassy_time::{Delay, Duration, Ticker};
-use embassy_time::Timer;
 
 bind_interrupts!(struct Irqs {
     I2C0_IRQ => InterruptHandler<I2C0>;
@@ -44,9 +43,8 @@ async fn main(spawner: Spawner) {
 
     // Create, initialise and calibrate the controller
     info!("initialising controller");
-    let mut controller = nunchuk::NunchukAsync::new(i2c, Delay);
+    let mut controller = Nunchuk::new(i2c, Delay);
     controller.init().await.unwrap();
-
 
     info!("begin polling controller");
     loop {

@@ -1,15 +1,3 @@
-// See https://www.raphnet-tech.com/support/classic_controller_high_res/ for data on high-precision mode
-
-// Abridged version of the above:
-// To enable High Resolution Mode, you simply write 0x03 to address 0xFE in the extension controller memory.
-// Then you poll the controller by reading 8 bytes at address 0x00 instead of only 6.
-// You can also restore the original format by writing the original value back to address 0xFE at any time.
-//
-// Classic mode:
-// http://wiibrew.org/wiki/Wiimote/Extension_Controllers/Classic_Controller
-//
-// See `decode_classic_report` and `decode_classic_hd_report` for data format
-
 use crate::core::{
     ControllerIdReport, ControllerType, ExtHdReport, ExtReport, EXT_I2C_ADDR,
     INTERMESSAGE_DELAY_MICROSEC_U32,
@@ -33,26 +21,27 @@ pub struct InterfaceAsync<I2C, Delay> {
     delay: Delay,
 }
 
-// use crate::nunchuk;
 impl<I2C, Delay> InterfaceAsync<I2C, Delay>
 where
     I2C: embedded_hal_async::i2c::I2c,
     Delay: embedded_hal_async::delay::DelayNs,
 {
-    /// Create a new Wii Nunchuck
-    ///
-    /// This method will open the provide i2c device file and will
-    /// send the required init sequence in order to read data in
-    /// the future.
+    /// Create async interface for wii-extension controller
     pub fn new(i2cdev: I2C, delay: Delay) -> Self {
         Self { i2cdev, delay }
     }
 
+    /// Destroy i2c interface, allowing recovery of i2c and delay
+    pub fn destroy(self) -> (I2C, Delay) {
+        (self.i2cdev, self.delay)
+    }
+
+    /// Access delay stored in interface
     pub(super) async fn delay_us(&mut self, micros: u32) {
         self.delay.delay_us(micros).await
     }
 
-    /// Read the button/axis data from the classic controller
+    /// Read report data from the wii-extension controller
     pub(super) async fn read_ext_report(&mut self) -> Result<ExtReport, AsyncImplError> {
         self.start_sample().await?;
         self.delay_us(INTERMESSAGE_DELAY_MICROSEC_U32).await;
@@ -64,7 +53,7 @@ where
             .and(Ok(buffer))
     }
 
-    /// Read a high-resolution version of the button/axis data from the classic controller
+    /// Read a high-resolution version of the report data from the wii-extension controller
     pub(super) async fn read_hd_report(&mut self) -> Result<ExtHdReport, AsyncImplError> {
         self.start_sample().await?;
         self.delay_us(INTERMESSAGE_DELAY_MICROSEC_U32).await;
@@ -77,8 +66,6 @@ where
     }
 
     /// Send the init sequence to the Wii extension controller
-    ///
-    /// This could be a bit faster with DelayUs, but since you only init once we'll re-use delay_ms
     pub(super) async fn init(&mut self) -> Result<(), AsyncImplError> {
         // Extension controllers by default will use encrypted communication, as that is what the Wii does.
         // We can disable this encryption by writing some magic values
@@ -96,7 +83,7 @@ where
 
     /// Switch the driver from standard to hi-resolution reporting
     ///
-    /// This enables the controllers high-resolution report data mode, which returns each
+    /// This enables the controller's high-resolution report data mode, which returns each
     /// analogue axis as a u8, rather than packing smaller integers in a structure.
     /// If your controllers supports this mode, you should use it. It is much better.
     pub(super) async fn enable_hires(&mut self) -> Result<(), AsyncImplError> {
@@ -122,6 +109,13 @@ where
             .and(Ok(()))
     }
 
+    /// Set the cursor position for the next i2c read after a small delay
+    ///
+    /// This hardware has a range of 100 registers and automatically
+    /// increments the register read postion on each read operation, and also on
+    /// every write operation.
+    /// This should be called before a read operation to ensure you get the correct data
+    /// The delay helps ensure that required timings are met
     pub(super) async fn set_read_register_address_with_delay(
         &mut self,
         byte0: u8,
@@ -140,6 +134,7 @@ where
             .and(Ok(()))
     }
 
+    /// Set a single register at target address after a small delay
     pub(super) async fn set_register_with_delay(
         &mut self,
         addr: u8,
@@ -150,12 +145,14 @@ where
         res.await
     }
 
+    /// Read the controller type ID register from the extension controller
     pub(super) async fn read_id(&mut self) -> Result<ControllerIdReport, AsyncImplError> {
         self.set_read_register_address(0xfa).await?;
         let i2c_id = self.read_ext_report().await?;
         Ok(i2c_id)
     }
 
+    /// Determine the controller type based on the type ID of the extension controller
     pub(super) async fn identify_controller(
         &mut self,
     ) -> Result<Option<ControllerType>, AsyncImplError> {
@@ -163,7 +160,7 @@ where
         Ok(crate::core::identify_controller(i2c_id))
     }
 
-    /// tell the extension controller to prepare a sample by setting the read cursor to 0
+    /// Instruct the extension controller to start preparing a sample by setting the read cursor to 0
     pub(super) async fn start_sample(&mut self) -> Result<(), AsyncImplError> {
         self.set_read_register_address(0x00).await?;
         Ok(())

@@ -34,7 +34,7 @@ fn nunchuck_idle() {
     let mut mock = i2c::Mock::new(&expectations);
     let delay = NoopDelay::new();
     let mut nc = Nunchuk::new(mock.clone(), delay).unwrap();
-    let report = nc.read_blocking().unwrap();
+    let report = nc.read().unwrap();
     assert!(!report.button_c);
     assert!(!report.button_z);
     mock.done();
@@ -58,7 +58,7 @@ fn nunchuck_idle_calibrated() {
     let mut mock = i2c::Mock::new(&expectations);
     let delay = NoopDelay::new();
     let mut nc = Nunchuk::new(mock.clone(), delay).unwrap();
-    let report = nc.read_blocking().unwrap();
+    let report = nc.read().unwrap();
     assert!(!report.button_c);
     assert!(!report.button_z);
     assert_eq!(report.joystick_x, 0);
@@ -84,7 +84,7 @@ fn nunchuck_left_calibrated() {
     let mut mock = i2c::Mock::new(&expectations);
     let delay = NoopDelay::new();
     let mut nc = Nunchuk::new(mock.clone(), delay).unwrap();
-    let report = nc.read_blocking().unwrap();
+    let report = nc.read().unwrap();
     assert!(!report.button_c);
     assert!(!report.button_z);
     assert!(report.joystick_x < -AXIS_MAX, "x = {}", report.joystick_x);
@@ -111,7 +111,7 @@ fn nunchuck_right_calibrated() {
     let mut mock = i2c::Mock::new(&expectations);
     let delay = NoopDelay::new();
     let mut nc = Nunchuk::new(mock.clone(), delay).unwrap();
-    let report = nc.read_blocking().unwrap();
+    let report = nc.read().unwrap();
     assert!(!report.button_c);
     assert!(!report.button_z);
     assert!(report.joystick_x > AXIS_MAX, "x = {}", report.joystick_x);
@@ -138,7 +138,7 @@ fn nunchuck_up_calibrated() {
     let mut mock = i2c::Mock::new(&expectations);
     let delay = NoopDelay::new();
     let mut nc = Nunchuk::new(mock.clone(), delay).unwrap();
-    let report = nc.read_blocking().unwrap();
+    let report = nc.read().unwrap();
     assert!(!report.button_c);
     assert!(!report.button_z);
     assert!(report.joystick_y > AXIS_MAX, "y = {}", report.joystick_y);
@@ -165,7 +165,7 @@ fn nunchuck_down_calibrated() {
     let mut mock = i2c::Mock::new(&expectations);
     let delay = NoopDelay::new();
     let mut nc = Nunchuk::new(mock.clone(), delay).unwrap();
-    let report = nc.read_blocking().unwrap();
+    let report = nc.read().unwrap();
     assert!(!report.button_c);
     assert!(!report.button_z);
     assert!(report.joystick_y < -AXIS_MAX, "y = {}", report.joystick_y);
@@ -195,10 +195,10 @@ fn nunchuck_idle_repeat() {
     let delay = NoopDelay::new();
     let mut nc = Nunchuk::new(mock.clone(), delay).unwrap();
 
-    let report = nc.read_report_blocking().unwrap();
+    let report = nc.read_uncalibrated().unwrap();
     assert!(!report.button_c);
     assert!(!report.button_z);
-    let report = nc.read_report_blocking().unwrap();
+    let report = nc.read_uncalibrated().unwrap();
     assert!(!report.button_c);
     assert!(!report.button_z);
     mock.done();
@@ -223,7 +223,7 @@ fn nunchuck_btn_c() {
     let delay = NoopDelay::new();
     let mut nc = Nunchuk::new(mock.clone(), delay).unwrap();
 
-    let report = nc.read_report_blocking().unwrap();
+    let report = nc.read_uncalibrated().unwrap();
     assert!(report.button_c);
     assert!(!report.button_z);
     mock.done();
@@ -248,7 +248,7 @@ fn nunchuck_btn_z() {
     let delay = NoopDelay::new();
     let mut nc = Nunchuk::new(mock.clone(), delay).unwrap();
 
-    let report = nc.read_report_blocking().unwrap();
+    let report = nc.read_uncalibrated().unwrap();
     assert!(!report.button_c);
     assert!(report.button_z);
     mock.done();

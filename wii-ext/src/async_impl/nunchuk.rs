@@ -1,37 +1,30 @@
-// The nunchuk portion of this crate is derived from
-// https://github.com/rust-embedded/rust-i2cdev/blob/master/examples/nunchuck.rs
-// which is Copyright 2015, Paul Osborne <osbpau@gmail.com>
-//
-// All the bugs are Copyright 2024, 9names.
-
-// Nunchuk technically supports HD report, but the last two bytes will be zeroes
-// There's no benefit, so we're leaving that unimplemented
 use crate::async_impl::interface::{AsyncImplError, InterfaceAsync};
 use crate::core::nunchuk::*;
-use crate::core::{ControllerIdReport, ControllerType};
+use crate::core::ControllerType;
 use embedded_hal_async;
 
-pub struct NunchukAsync<I2C, Delay> {
+pub struct Nunchuk<I2C, Delay> {
     interface: InterfaceAsync<I2C, Delay>,
     calibration: CalibrationData,
 }
 
-impl<I2C, Delay> NunchukAsync<I2C, Delay>
+impl<I2C, Delay> Nunchuk<I2C, Delay>
 where
     I2C: embedded_hal_async::i2c::I2c,
     Delay: embedded_hal_async::delay::DelayNs,
 {
     /// Create a new Wii Nunchuck
-    ///
-    /// This method will open the provide i2c device file and will
-    /// send the required init sequence in order to read data in
-    /// the future.
     pub fn new(i2cdev: I2C, delay: Delay) -> Self {
         let interface = InterfaceAsync::new(i2cdev, delay);
         Self {
             interface,
             calibration: CalibrationData::default(),
         }
+    }
+
+    /// Destroy this driver, recovering the i2c bus and delay used to create it
+    pub fn destroy(self) -> (I2C, Delay) {
+        self.interface.destroy()
     }
 
     /// Update the stored calibration for this controller
@@ -47,16 +40,8 @@ where
         Ok(())
     }
 
-    /// Send the init sequence to the Wii extension controller
-    ///
-    /// This could be a bit faster with DelayUs, but since you only init once we'll re-use delay_ms
+    /// Send the init sequence to the controller and calibrate it
     pub async fn init(&mut self) -> Result<(), AsyncImplError> {
-        // Extension controllers by default will use encrypted communication, as that is what the Wii does.
-        // We can disable this encryption by writing some magic values
-        // This is described at https://wiibrew.org/wiki/Wiimote/Extension_Controllers#The_New_Way
-
-        // Reset to base register first - this should recover a controller in a weird state.
-        // Use longer delays here than normal reads - the system seems more unreliable performing these commands
         self.interface.init().await?;
         self.update_calibration().await?;
         Ok(())
@@ -76,10 +61,7 @@ where
         ))
     }
 
-    pub async fn read_id(&mut self) -> Result<ControllerIdReport, AsyncImplError> {
-        self.interface.read_id().await
-    }
-
+    /// Determine the controller type based on the type ID of the extension controller
     pub async fn identify_controller(&mut self) -> Result<Option<ControllerType>, AsyncImplError> {
         self.interface.identify_controller().await
     }

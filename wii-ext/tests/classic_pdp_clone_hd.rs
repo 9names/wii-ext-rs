@@ -51,7 +51,7 @@ macro_rules! assert_joystick_hd {
                 let delay = NoopDelay::new();
                 let mut classic = Classic::new(i2c.clone(), delay).unwrap();
                 classic.enable_hires().unwrap();
-                let input = classic.read_blocking().unwrap();
+                let input = classic.read().unwrap();
 
                 assert!(
                     ($lxl..=$lxh).contains(&input.joystick_left_x),

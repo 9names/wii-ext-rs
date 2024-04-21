@@ -19,3 +19,6 @@ paste = "1.0.6"
 [features]
 default = ["defmt_print"]
 defmt_print = ["defmt"]
+
+[lib]
+doctest = false

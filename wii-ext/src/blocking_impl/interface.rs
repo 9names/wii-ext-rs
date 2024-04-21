@@ -28,6 +28,11 @@ where
         Interface { i2cdev, delay }
     }
 
+    /// Recover data members
+    pub fn destroy(self) -> (I2C, Delay) {
+        (self.i2cdev, self.delay)
+    }
+
     /// Send the init sequence to the Wii extension controller
     pub(super) fn init(&mut self) -> Result<(), BlockingImplError<E>> {
         // Extension controllers by default will use encrypted communication, as that is what the Wii does.
@@ -43,9 +48,6 @@ where
         self.delay.delay_us(INTERMESSAGE_DELAY_MICROSEC * 2);
         self.set_register(0xFB, 0x00)?;
         self.delay.delay_us(INTERMESSAGE_DELAY_MICROSEC * 2);
-        // TODO: move calibration to each impl
-        //self.update_calibration()?;
-        self.delay.delay_us(INTERMESSAGE_DELAY_MICROSEC * 2);
         Ok(())
     }
 
@@ -55,6 +57,7 @@ where
         Ok(i2c_id)
     }
 
+    /// Determine the controller type based on the type ID of the extension controller
     pub(super) fn identify_controller(
         &mut self,
     ) -> Result<Option<ControllerType>, BlockingImplError<E>> {
