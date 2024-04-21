@@ -3,13 +3,13 @@ use crate::core::classic::*;
 use crate::core::ControllerType;
 use embedded_hal_async;
 
-pub struct ClassicAsync<I2C, Delay> {
+pub struct Classic<I2C, Delay> {
     interface: InterfaceAsync<I2C, Delay>,
     hires: bool,
     calibration: CalibrationData,
 }
 
-impl<I2C, Delay> ClassicAsync<I2C, Delay>
+impl<I2C, Delay> Classic<I2C, Delay>
 where
     I2C: embedded_hal_async::i2c::I2c,
     Delay: embedded_hal_async::delay::DelayNs,
