@@ -6,6 +6,7 @@ edition = "2021"
 authors = ["9names"]
 repository = "https://github.com/9names/wii-ext-rs"
 license = "MIT OR Apache-2.0"
+readme = "README.md"
 
 [dependencies]
 embedded-hal = "1"

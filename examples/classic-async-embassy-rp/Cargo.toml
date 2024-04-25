@@ -1,10 +1,10 @@
 [package]
 edition = "2021"
-name = "embassy_rp_async"
+name = "classic-async-embassy-rp"
 version = "0.1.0"
 license = "MIT OR Apache-2.0"
 resolver = "2"
-
+publish = false
 
 [dependencies]
 wii-ext = { version = "0.4.0", features = [

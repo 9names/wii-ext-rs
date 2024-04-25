@@ -4,63 +4,13 @@ This is a platform agnostic Rust driver for Wiimote Extension controllers (Nunch
 
 This driver allows you to read all axes and buttons for Wiimote Extension controllers
 
-## Physical protocol details
+Driver docs are available in [the wii-ext directory](wii-ext/README.md)
 
-Wiimote extension controllers are designed to talk to a Wiimote over an I2C interface at 3.3V.
-The official controllers are capable of operating in fast-mode (400Khz) though some clones require normal-mode (100Khz).
-The protocol is quite simple - it's not officially documented, but it has been reverse-engineered.
-
-- <http://wiibrew.org/wiki/Wiimote/Extension_Controllers>
-- <http://wiibrew.org/wiki/Wiimote/Extension_Controllers/Nunchuck>
-- <http://wiibrew.org/wiki/Wiimote/Extension_Controllers/Classic_Controller>
-
-High Resolution mode is a recent addition and was only discovered once the NES Classic console was released. It is described here:
-- <https://www.raphnet-tech.com/support/classic_controller_high_res>
-
-
-Wii Motion Plus support is planned, both in standalone and combo mode
-
-## Usage
-
-To use this driver, import this crate and an `embedded_hal`/`embedded_hal_async` implementation,
-then instantiate the appropriate device.
-
-```rust
-use ::I2C; // insert an include for your HAL i2c peripheral name here
-// use the synchronous/blocking driver
-use wii_ext::blocking_impl::classic::Classic;
-// use the asynchronous driver
-// use wii_ext::async_impl::classic::Classic;
-
-fn main() {
-    let i2c = I2C::new(); // insert your HAL i2c init here
-    let mut delay = cortex_m::delay::Delay::new(); // some delay source as well
-    // Create, initialise and calibrate the controller
-    // You could use Nunchuk::new() instead of Classic::new() here
-    let mut controller = Classic::new(i2c, delay).unwrap();
-    // Enable hi-resolution mode. This also updates calibration
-    // Only supported for Classic controllers
-    controller.enable_hires().unwrap();
-    loop {
-        // read_blocking returns calibrated data: joysticks and
-        // triggers will return signed integers, relative to calibration
-        // position. Eg: center is (0,0), left is (-90,0) in standard resolution
-        // or (-126,0) in HD, etc
-        let input = controller.read().unwrap();
-        // You can read individual buttons...
-        let a = input.button_a;
-        let b = input.button_b;
-        // or joystick axes
-        let x = input.joystick_left_x;
-        let y = input.joystick_left_y;
-        // the data structs optionally support defmt::debug
-        // if you enable features=["defmt_print"]
-        info!("{:?}", input);
-        // Calibration can be manually performed as needed
-        controller.update_calibration().unwrap();
-    }
-}
-```
+Examples:
+ - [using the async api for classic controller](examples/classic-async-embassy-rp)
+ - [using the async api for the nunchuk controller](examples/nunchuk-async-embassy-rp)
+ - [using the blocking api for classic controller](examples/classic-blocking-rp2040-hal)
+ - [using the blocking api for the nunchuk controller](examples/nunchuk-blocking-rp2040-hal)
 
 ## Status
 
