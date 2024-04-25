@@ -10,12 +10,12 @@ Wiimote extension controllers are designed to talk to a Wiimote over an I2C inte
 The official controllers are capable of operating in fast-mode (400Khz) though some clones require normal-mode (100Khz).
 The protocol is quite simple - it's not officially documented, but it has been reverse-engineered.
 
-- http://wiibrew.org/wiki/Wiimote/Extension_Controllers
-- http://wiibrew.org/wiki/Wiimote/Extension_Controllers/Nunchuck
-- http://wiibrew.org/wiki/Wiimote/Extension_Controllers/Classic_Controller
+- <http://wiibrew.org/wiki/Wiimote/Extension_Controllers>
+- <http://wiibrew.org/wiki/Wiimote/Extension_Controllers/Nunchuck>
+- <http://wiibrew.org/wiki/Wiimote/Extension_Controllers/Classic_Controller>
 
 High Resolution mode is a recent addition and was only discovered once the NES Classic console was released. It is described here:
-- https://www.raphnet-tech.com/support/classic_controller_high_res/
+- <https://www.raphnet-tech.com/support/classic_controller_high_res>
 
 
 Wii Motion Plus support is planned, both in standalone and combo mode
@@ -66,7 +66,7 @@ fn main() {
 
 - Nunchuk is supported
 - Classic controllers supported in regular and HD mode
-- Controller init is not 100% reliable, can suffer from i2c errors. This seems to affect the blocking implementation more than async
+- Controller init is not 100% reliable, can suffer from i2c errors. This seems to affect the blocking implementation more than async.  
   Error handling around new() is strongly recommended.
 
 ## Support
@@ -77,15 +77,15 @@ For questions, issues, feature requests like compatibility with other Wiimote ex
 ## License
 
 Nunchuk portions of this crate are largely derived from  
-https://github.com/rust-embedded/rust-i2cdev/blob/master/examples/nunchuck.rs  
+<https://github.com/rust-embedded/rust-i2cdev/blob/master/examples/nunchuck.rs>  
 Copyright 2015, Paul Osborne <osbpau@gmail.com>
 
 Licensed under either of
 
  * Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or
-   http://www.apache.org/licenses/LICENSE-2.0)
+   <http://www.apache.org/licenses/LICENSE-2.0>)
  * MIT license ([LICENSE-MIT](LICENSE-MIT) or
-   http://opensource.org/licenses/MIT)
+   <http://opensource.org/licenses/MIT>)
 
 at your option.
 
