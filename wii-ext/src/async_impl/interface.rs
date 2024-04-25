@@ -16,6 +16,8 @@ pub enum AsyncImplError {
     ParseError,
 }
 
+#[cfg_attr(feature = "defmt_print", derive(defmt::Format))]
+#[derive(Debug, Default)]
 pub struct InterfaceAsync<I2C, Delay> {
     i2cdev: I2C,
     delay: Delay,

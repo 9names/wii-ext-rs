@@ -2,7 +2,7 @@
 use defmt;
 
 #[cfg_attr(feature = "defmt_print", derive(defmt::Format))]
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct NunchukReading {
     pub joystick_x: u8,
     pub joystick_y: u8,
@@ -34,7 +34,8 @@ impl NunchukReading {
 /// Relaxed/Center positions for each axis
 ///
 /// These are used to calculate the relative deflection of each access from their center point
-#[derive(Default)]
+#[cfg_attr(feature = "defmt_print", derive(defmt::Format))]
+#[derive(Debug, Default)]
 pub struct CalibrationData {
     pub joystick_x: u8,
     pub joystick_y: u8,

@@ -3,6 +3,7 @@ use crate::core::classic::*;
 use crate::core::ControllerType;
 use embedded_hal_async;
 
+#[derive(Debug, Default)]
 pub struct Classic<I2C, Delay> {
     interface: InterfaceAsync<I2C, Delay>,
     hires: bool,

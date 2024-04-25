@@ -181,7 +181,8 @@ pub(crate) fn decode_classic_hd_report(data: &[u8]) -> ClassicReading {
 /// Relaxed/Center positions for each axis
 ///
 /// These are used to calculate the relative deflection of each access from their center point
-#[derive(Default)]
+#[cfg_attr(feature = "defmt_print", derive(defmt::Format))]
+#[derive(Debug, Default)]
 pub struct CalibrationData {
     pub joystick_left_x: u8,
     pub joystick_left_y: u8,

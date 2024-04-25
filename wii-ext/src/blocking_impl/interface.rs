@@ -4,14 +4,16 @@ use crate::core::{
 };
 use embedded_hal::i2c::{I2c, SevenBitAddress};
 
+#[cfg_attr(feature = "defmt_print", derive(defmt::Format))]
+#[derive(Debug, Default)]
 pub struct Interface<I2C, Delay> {
     i2cdev: I2C,
     delay: Delay,
 }
 
 #[cfg_attr(feature = "defmt_print", derive(defmt::Format))]
-/// Errors in this crate
 #[derive(Debug)]
+/// Errors in this crate
 pub enum BlockingImplError<E> {
     /// I²C bus communication error
     I2C(E),
