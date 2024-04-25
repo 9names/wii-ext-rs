@@ -14,6 +14,8 @@ pub enum ClassicError<E> {
     ParseError,
 }
 
+#[cfg_attr(feature = "defmt_print", derive(defmt::Format))]
+#[derive(Debug, Default)]
 pub struct Classic<I2C, DELAY> {
     interface: Interface<I2C, DELAY>,
     hires: bool,
