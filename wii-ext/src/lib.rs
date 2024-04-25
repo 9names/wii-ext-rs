@@ -1,4 +1,4 @@
-#![doc = include_str!("../../README.md")]
+#![doc = include_str!("../README.md")]
 // See https://www.raphnet-tech.com/support/classic_controller_high_res/ for data on high-precision mode
 
 // Abridged version of the above:
