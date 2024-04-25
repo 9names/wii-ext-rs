@@ -7,7 +7,7 @@ resolver = "2"
 
 
 [dependencies]
-wii-ext = { version = "0.3.0", features = [
+wii-ext = { version = "0.4.0", features = [
     "defmt_print",
 ], path = "../../wii-ext" }
 
