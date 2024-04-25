@@ -2,7 +2,7 @@
 authors = ["9names"]
 edition = "2018"
 readme = "README.md"
-name = "wii-ext_blocking_demo"
+name = "nunchuk-blocking-rp2040-hal"
 version = "0.1.0"
 resolver = "2"
 publish = false

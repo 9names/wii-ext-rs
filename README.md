@@ -7,10 +7,10 @@ This driver allows you to read all axes and buttons for Wiimote Extension contro
 Driver docs are available in [the wii-ext directory](wii-ext/README.md)
 
 Examples:
- - [using the async api for classic controller](examples/embassy-rp-async)
- - [using the async api for the nunchuk controller](examples/nunchuck-async-embassy-rp)
- - [using the blocking api for classic controller](examples/rp2040-hal-blocking/)
- - [using the blocking api for the nunchuk controller](examples/nunchuk-blocking-rp2040-hal/) 
+ - [using the async api for classic controller](examples/classic-async-embassy-rp)
+ - [using the async api for the nunchuk controller](examples/nunchuk-async-embassy-rp)
+ - [using the blocking api for classic controller](examples/classic-blocking-rp2040-hal)
+ - [using the blocking api for the nunchuk controller](examples/nunchuk-blocking-rp2040-hal)
 
 ## Status
 
