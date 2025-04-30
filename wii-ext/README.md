@@ -25,41 +25,41 @@ Wii Motion Plus support is planned, both in standalone and combo mode
 To use this driver, import this crate and an `embedded_hal`/`embedded_hal_async` implementation,
 then instantiate the appropriate device.
 
-```rust
+```ignore
 use ::I2C; // insert an include for your HAL i2c peripheral name here
 // use the synchronous/blocking driver
 use wii_ext::blocking_impl::classic::Classic;
 // use the asynchronous driver
 // use wii_ext::async_impl::classic::Classic;
+use defmt::info;
 
-fn main() {
-    let i2c = I2C::new(); // insert your HAL i2c init here
-    let mut delay = cortex_m::delay::Delay::new(); // some delay source as well
-    // Create, initialise and calibrate the controller
-    // You could use Nunchuk::new() instead of Classic::new() here
-    let mut controller = Classic::new(i2c, delay).unwrap();
-    // Enable hi-resolution mode. This also updates calibration
-    // Only supported for Classic controllers
-    controller.enable_hires().unwrap();
-    loop {
-        // read_blocking returns calibrated data: joysticks and
-        // triggers will return signed integers, relative to calibration
-        // position. Eg: center is (0,0), left is (-90,0) in standard resolution
-        // or (-126,0) in HD, etc
-        let input = controller.read().unwrap();
-        // You can read individual buttons...
-        let a = input.button_a;
-        let b = input.button_b;
-        // or joystick axes
-        let x = input.joystick_left_x;
-        let y = input.joystick_left_y;
-        // the data structs optionally support defmt::debug
-        // if you enable features=["defmt_print"]
-        info!("{:?}", input);
-        // Calibration can be manually performed as needed
-        controller.update_calibration().unwrap();
-    }
+let i2c = I2C::new(); // insert your HAL i2c init here
+let mut delay = cortex_m::delay::Delay::new(); // some delay source as well
+// Create, initialise and calibrate the controller
+// You could use Nunchuk::new() instead of Classic::new() here
+let mut controller = Classic::new(i2c, delay).unwrap();
+// Enable hi-resolution mode. This also updates calibration
+// Only supported for Classic controllers
+controller.enable_hires().unwrap();
+loop {
+    // read_blocking returns calibrated data: joysticks and
+    // triggers will return signed integers, relative to calibration
+    // position. Eg: center is (0,0), left is (-90,0) in standard resolution
+    // or (-126,0) in HD, etc
+    let input = controller.read().unwrap();
+    // You can read individual buttons...
+    let a = input.button_a;
+    let b = input.button_b;
+    // or joystick axes
+    let x = input.joystick_left_x;
+    let y = input.joystick_left_y;
+    // the data structs optionally support defmt::debug
+    // if you enable features=["defmt_print"]
+    info!("{:?}", input);
+    // Calibration can be manually performed as needed
+    controller.update_calibration().unwrap();
 }
+
 ```
 
 ## Status
