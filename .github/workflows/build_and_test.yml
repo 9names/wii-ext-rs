@@ -8,15 +8,15 @@ jobs:
       matrix:
         project:
           - wii-ext
-          - classic-async-embassy-rp
-          - classic-blocking-rp2040-hal
-          - nunchuk-async-embassy-rp
-          - nunchuk-blocking-rp2040-hal
+          - examples/classic-async-embassy-rp
+          - examples/classic-blocking-rp2040-hal
+          - examples/nunchuk-async-embassy-rp
+          - examples/nunchuk-blocking-rp2040-hal
         toolchain:
           - stable
     defaults:
       run:
-        working-directory: ${{ matrix.project == 'wii-ext' && 'wii-ext' || format('examples/{0}', matrix.project) }}
+        working-directory: ${{ matrix.project }}
     steps:
       - uses: actions/checkout@v4
       - run: rustup update ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
