@@ -4,9 +4,17 @@ jobs:
   fmt:
     name: Rustfmt
     runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        project:
+          - wii-ext
+          - examples/classic-async-embassy-rp
+          - examples/classic-blocking-rp2040-hal
+          - examples/nunchuk-async-embassy-rp
+          - examples/nunchuk-blocking-rp2040-hal
     defaults:
       run:
-        working-directory: wii-ext
+        working-directory: ${{ matrix.project }}
     env:
       RUSTFLAGS: "-D warnings"
     steps:
