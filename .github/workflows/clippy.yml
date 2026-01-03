@@ -4,9 +4,17 @@ jobs:
   clippy_check:
     name: Run Clippy
     runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        project:
+          - wii-ext
+          - classic-async-embassy-rp
+          - classic-blocking-rp2040-hal
+          - nunchuk-async-embassy-rp
+          - nunchuk-blocking-rp2040-hal
     defaults:
       run:
-        working-directory: wii-ext
+        working-directory: ${{ matrix.project == 'wii-ext' && 'wii-ext' || format('examples/{0}', matrix.project) }}
     env:
       RUSTFLAGS: "-D warnings"
     steps:
@@ -15,4 +23,9 @@ jobs:
         with:
           target: thumbv6m-none-eabi
           components: clippy
-      - run: cargo clippy
+      - name: Run Clippy on library
+        if: matrix.project == 'wii-ext'
+        run: cargo clippy
+      - name: Run Clippy on example
+        if: matrix.project != 'wii-ext'
+        run: cargo clippy --target thumbv6m-none-eabi

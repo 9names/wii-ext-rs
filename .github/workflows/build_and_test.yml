@@ -4,15 +4,29 @@ jobs:
   build_and_test:
     name: Build and test
     runs-on: ubuntu-24.04
-    defaults:
-      run:
-        working-directory: wii-ext
     strategy:
       matrix:
+        project:
+          - wii-ext
+          - classic-async-embassy-rp
+          - classic-blocking-rp2040-hal
+          - nunchuk-async-embassy-rp
+          - nunchuk-blocking-rp2040-hal
         toolchain:
           - stable
+    defaults:
+      run:
+        working-directory: ${{ matrix.project == 'wii-ext' && 'wii-ext' || format('examples/{0}', matrix.project) }}
     steps:
       - uses: actions/checkout@v4
       - run: rustup update ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
-      - run: cargo build --verbose
-      - run: cargo test --verbose
+      - run: rustup target add thumbv6m-none-eabi
+      - name: Build library
+        if: matrix.project == 'wii-ext'
+        run: cargo build --verbose
+      - name: Build example
+        if: matrix.project != 'wii-ext'
+        run: cargo build --verbose --target thumbv6m-none-eabi
+      - name: Run tests
+        if: matrix.project == 'wii-ext'
+        run: cargo test --verbose
