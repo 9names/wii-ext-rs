@@ -42,7 +42,7 @@ where
             joystick_right_x: data.joystick_right_x,
             joystick_right_y: data.joystick_right_y,
             trigger_left: data.trigger_left,
-            trigger_right: data.trigger_left,
+            trigger_right: data.trigger_right,
         };
         Ok(())
     }
