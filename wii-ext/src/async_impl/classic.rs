@@ -79,7 +79,10 @@ where
     /// analogue axis as a u8, rather than packing smaller integers in a structure.
     /// If your controllers supports this mode, you should use it. It is much better.
     pub async fn enable_hires(&mut self) -> Result<(), AsyncImplError> {
-        self.interface.enable_hires().await
+        self.interface.enable_hires().await?;
+        self.hires = true;
+        self.update_calibration().await?;
+        Ok(())
     }
 
     /// Determine the controller type based on the type ID of the extension controller
